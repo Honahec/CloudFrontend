@@ -5,14 +5,14 @@ import axios, { type AxiosInstance } from 'axios'
 
 // 1) 先创建 axios 实例
 const axiosInst: AxiosInstance = axios.create({
-  baseURL: import.meta.env.VITE_API_BASE || 'http://0.0.0.0:8000',
+  baseURL: import.meta.env.VITE_API_BASE || 'http://127.0.0.1:8000',
   timeout: 10000,
   headers: { 'Content-Type': 'application/json' },
 })
 
 // 2) 再创建 alova 实例，并把 axios 实例交给 adapter
 export const Alova = createAlova({
-  baseURL: import.meta.env.VITE_API_BASE || 'http://0.0.0.0:8000',
+  baseURL: import.meta.env.VITE_API_BASE || 'http://127.0.0.1:8000',
   statesHook: VueHook,
   requestAdapter: axiosRequestAdapter({ axios: axiosInst }), // ← 传“实例”不是构造函数
   responded: {

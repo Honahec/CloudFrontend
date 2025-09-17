@@ -57,8 +57,8 @@ onMounted(async () => {
   try {
     const res = await getUserInfo()
     user.value = res
-    userName.value = res.UserName
-    displayName.value = res.DisplayName
+    userName.value = res.username
+    displayName.value = res.display_name
     isLoggedIn.value = true
   } catch (e) {
     isLoggedIn.value = false

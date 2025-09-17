@@ -1,17 +1,18 @@
 export interface UserInfo {
-  userID: number
-  UserName: string
-  DisplayName: string
-  Email: string
-  IsActive: boolean
-  Permission: string
+  id: number
+  username: string
+  display_name: string
+  email: string
+  is_active: boolean
+  permission: string
 }
 export interface userRegisterQuery {
-  UserName: string
-  Email: string
-  Password: string
+  username: string
+  email: string
+  password: string
+  display_name: string
 }
 export interface userLoginQuery {
-  UserName: string
-  Password: string
+  username: string
+  password: string
 }

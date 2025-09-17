@@ -1,23 +1,29 @@
 <template>
   <el-form
-    :model="loginForm"
-    ref="loginFormRef"
+    :model="registerForm"
+    ref="registerFormRef"
     label-width="80px"
-    class="login-form"
+    class="register-form"
     @submit.prevent="onSubmit"
   >
     <el-form-item label="用户名" prop="UserName">
-      <el-input v-model="loginForm.username" autocomplete="username" />
+      <el-input v-model="registerForm.username" autocomplete="username" />
+    </el-form-item>
+    <el-form-item label="昵称" prop="Display_Name">
+      <el-input v-model="registerForm.display_name" autocomplete="username" />
+    </el-form-item>
+    <el-form-item label="邮件" prop="UserName">
+      <el-input v-model="registerForm.email" autocomplete="username" />
     </el-form-item>
     <el-form-item label="密码" prop="Password">
       <el-input
-        v-model="loginForm.password"
+        v-model="registerForm.password"
         type="password"
         autocomplete="current-password"
       />
     </el-form-item>
     <el-form-item>
-      <el-button type="primary" @click="onSubmit">登录</el-button>
+      <el-button type="primary" @click="onSubmit">注册</el-button>
     </el-form-item>
   </el-form>
 </template>
@@ -26,26 +32,17 @@ import { ref } from 'vue'
 import { userRegister, userLogin } from '@/api/users/api'
 import type { userLoginQuery, userRegisterQuery } from '@/api/users/type'
 
-const loginForm = ref<userLoginQuery>({
+const registerForm = ref<userRegisterQuery>({
   username: '',
   password: '',
+  email: '',
+  display_name: '',
 })
 
 const loginFormRef = ref()
 
 const onSubmit = () => {
-  doLogin(loginForm.value)
-}
-
-const doLogin = async (loginForm: userLoginQuery) => {
-  console.log('username: ' + loginForm.username)
-  console.log('password: ' + loginForm.password)
-  try {
-    const res = await userLogin(loginForm)
-    console.log('登录成功', res)
-  } catch (err) {
-    console.error('登录失败', err)
-  }
+  doRegister(registerForm.value)
 }
 
 const doRegister = async (registerForm: userRegisterQuery) => {
