@@ -128,9 +128,17 @@ function openRow(row: FileRecord) {
   }
 }
 
-function downloadRow(row: FileRecord) {
-  if (row.content_type !== 'folder' && row.oss_url)
-    window.open(row.oss_url, '_blank')
+async function downloadRow(row: FileRecord) {
+  if (row.content_type === 'folder') return
+  try {
+    const data = await downloadFile(row.id).send()
+    const url = (data as any)?.download_url || row.oss_url
+    if (!url) throw new Error('No download url')
+    triggerDownload(url, row.name)
+  } catch (e) {
+    console.error(e)
+    ElMessage.error('Download failed')
+  }
 }
 async function deleteRow(row: FileRecord) {
   const ok = await ElMessageBox.confirm(`Delete "${row.name}"?`, 'Delete', {
@@ -157,17 +165,31 @@ async function onDownload() {
   const targets = selected.value.filter((r) => r.content_type !== 'folder')
   if (targets.length === 0) return
   try {
-    const urls = await Promise.all(
+    const results = await Promise.all(
       targets.map(async (r) => {
         const data = await downloadFile(r.id).send()
-        return (data as any)?.download_url as string
+        const url = (data as any)?.download_url || r.oss_url
+        return { url, name: r.name }
       })
     )
-    urls.filter(Boolean).forEach((url) => window.open(url, '_blank'))
+    results.forEach((it) => {
+      if (it.url) triggerDownload(it.url, it.name)
+    })
   } catch (e) {
     console.error(e)
     ElMessage.error('Download failed')
   }
+}
+
+function triggerDownload(url: string, filename: string) {
+  const a = document.createElement('a')
+  a.href = url
+  a.download = filename || ''
+  a.rel = 'noopener'
+  a.target = '_blank'
+  document.body.appendChild(a)
+  a.click()
+  document.body.removeChild(a)
 }
 async function onMove() {
   if (selected.value.length === 0) return
