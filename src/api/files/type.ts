@@ -51,3 +51,10 @@ export interface FileUpdateResponse {
   file: FileRecord
   message: string
 }
+
+export interface FileDownloadLink {
+  download_url: string
+  message?: string
+}
+
+export type FileDownloadResponse = FileDownloadLink

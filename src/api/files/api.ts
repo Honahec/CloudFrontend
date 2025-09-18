@@ -5,6 +5,7 @@ import type {
   FolderCreateResponse,
   ReachToken,
   FileUpdateResponse,
+  FileDownloadResponse,
 } from './type'
 import type { NotifyItem } from '@/utils/fileUtils'
 import { getTokenCookies } from '@/utils/userUtils'
@@ -85,13 +86,16 @@ export const updateFile = (
   }>
 ) => {
   const access = getTokenCookies().access
-  return Alova.Post<FileUpdateResponse>(
-    `/file/${id}/update/`,
-    data,
-    {
-      headers: access ? { Authorization: `Bearer ${access}` } : undefined,
-    }
-  )
+  return Alova.Post<FileUpdateResponse>(`/file/${id}/update/`, data, {
+    headers: access ? { Authorization: `Bearer ${access}` } : undefined,
+  })
 }
 
-// (legacy variations removed)
+export const downloadFile = (id: number) => {
+  const access = getTokenCookies().access
+  return Alova.Post<FileDownloadResponse>(
+    `/file/${id}/download/`,
+    {},
+    { headers: access ? { Authorization: `Bearer ${access}` } : undefined }
+  )
+}

@@ -65,12 +65,14 @@ import {
   updateFile,
   createFolder,
   getOSSPolicy,
+  downloadFile,
 } from '@/api/files/api'
 import type { FileRecord } from '@/api/files/type'
 import DriveBreadcrumb from '@/components/drive/DriveBreadcrumb.vue'
 import FilesTable from '@/components/drive/FilesTable.vue'
 import { ElMessage, ElMessageBox } from 'element-plus'
 import { uploadAndNotify } from '@/utils/fileUtils'
+import { md5 } from '@/utils/crypto/md5'
 
 const router = useRouter()
 const route = useRoute()
@@ -151,11 +153,21 @@ function onSelectionChange(rows: FileRecord[]) {
   selected.value = rows
 }
 
-function onDownload() {
-  if (selectedNonFolderCount.value === 0) return
-  selected.value
-    .filter((r) => r.content_type !== 'folder' && r.oss_url)
-    .forEach((r) => window.open(r.oss_url, '_blank'))
+async function onDownload() {
+  const targets = selected.value.filter((r) => r.content_type !== 'folder')
+  if (targets.length === 0) return
+  try {
+    const urls = await Promise.all(
+      targets.map(async (r) => {
+        const data = await downloadFile(r.id).send()
+        return (data as any)?.download_url as string
+      })
+    )
+    urls.filter(Boolean).forEach((url) => window.open(url, '_blank'))
+  } catch (e) {
+    console.error(e)
+    ElMessage.error('Download failed')
+  }
 }
 async function onMove() {
   if (selected.value.length === 0) return
@@ -229,7 +241,15 @@ async function onUpload() {
 
       // 4) 直传 OSS 然后通知后端
       await uploadAndNotify(fs as File[], policy.token, {
-        keyResolver: (f) => `${prefix}${pathPrefix}${f.name}`,
+        keyResolver: (f) => {
+          const name = f.name
+          const dot = name.lastIndexOf('.')
+          const ext = dot >= 0 ? name.slice(dot) : ''
+          const rand = Math.random().toString(36).slice(2, 10)
+          const stamp = Date.now().toString()
+          const base = md5(`${name}-${stamp}-${rand}`)
+          return `${prefix}${pathPrefix}${base}${ext}`
+        },
         notifyPath,
       })
 
