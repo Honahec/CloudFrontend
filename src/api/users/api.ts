@@ -41,7 +41,7 @@ export const changePassword = (params: {
   new_password: string
 }) => {
   const access = getTokenCookies().access
-  return Alova.Post<logoutStatus>('/user/change-password/', params, {
+  return Alova.Post<logoutStatus>('/user-settings/change-password/', params, {
     headers: {
       Authorization: `Bearer ${access}`,
     },
@@ -50,7 +50,7 @@ export const changePassword = (params: {
 
 export const updateEmail = (params: { email: string }) => {
   const access = getTokenCookies().access
-  return Alova.Post<GetUserInfo>('/user/update-email/', params, {
+  return Alova.Post<GetUserInfo>('/user-settings/update-email/', params, {
     headers: {
       Authorization: `Bearer ${access}`,
     },
@@ -59,11 +59,15 @@ export const updateEmail = (params: { email: string }) => {
 
 export const updateDisplayName = (params: { display_name: string }) => {
   const access = getTokenCookies().access
-  return Alova.Post<GetUserInfo>('/user/update-display-name/', params, {
-    headers: {
-      Authorization: `Bearer ${access}`,
-    },
-  })
+  return Alova.Post<GetUserInfo>(
+    '/user-settings/update-display-name/',
+    params,
+    {
+      headers: {
+        Authorization: `Bearer ${access}`,
+      },
+    }
+  )
 }
 
 export const userRegister = (

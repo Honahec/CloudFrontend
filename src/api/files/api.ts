@@ -1,0 +1,97 @@
+import { Alova } from '@/utils/alova/index'
+import type {
+  FileDeleteResponse,
+  FileResponse,
+  FolderCreateResponse,
+  ReachToken,
+  FileUpdateResponse,
+} from './type'
+import type { NotifyItem } from '@/utils/fileUtils'
+import { getTokenCookies } from '@/utils/userUtils'
+
+// Get a direct-upload policy/token for Aliyun OSS
+export const getOSSPolicy = () => {
+  const access = getTokenCookies().access
+  return Alova.Get<ReachToken>('/file/get-token/', {
+    headers: access ? { Authorization: `Bearer ${access}` } : undefined,
+  })
+}
+
+// Notify backend that files were uploaded to OSS successfully
+export const notifyFilesUploaded = (items: NotifyItem[]) => {
+  const access = getTokenCookies().access
+  return Alova.Post<FileResponse>('/file/uploaded/', items, {
+    headers: access ? { Authorization: `Bearer ${access}` } : undefined,
+  })
+}
+
+// List files by logical drive path, e.g. path = '' or 'path/to/folder'
+export const listFilesByPath = (path: string) => {
+  const access = getTokenCookies().access
+  const normalized = path ? (path.startsWith('/') ? path : '/' + path) : '/'
+  return Alova.Post<FileResponse>(
+    '/file/list/',
+    { path: normalized },
+    {
+      headers: access ? { Authorization: `Bearer ${access}` } : undefined,
+    }
+  )
+}
+
+// Create a folder under a given path
+export const createFolder = (path: string, name: string) => {
+  const access = getTokenCookies().access
+  const normalized = path ? (path.startsWith('/') ? path : '/' + path) : '/'
+  return Alova.Post<FolderCreateResponse>(
+    '/file/new-folder/',
+    { path: normalized, folder_name: name },
+    {
+      headers: access ? { Authorization: `Bearer ${access}` } : undefined,
+    }
+  )
+}
+
+// Delete multiple entries (files or folders) by ids
+export const deleteFiles = (ids: number[]) => {
+  const access = getTokenCookies().access
+  return Alova.Post<FileDeleteResponse>(
+    '/file/delete/',
+    { ids },
+    {
+      headers: access ? { Authorization: `Bearer ${access}` } : undefined,
+    }
+  )
+}
+
+// Delete a single file/folder by id in URL
+export const deleteFile = (id: number) => {
+  const access = getTokenCookies().access
+  return Alova.Post<FileDeleteResponse>(
+    `/file/${id}/delete/`,
+    {},
+    { headers: access ? { Authorization: `Bearer ${access}` } : undefined }
+  )
+}
+
+// Update a single file/folder by id; partial fields supported
+export const updateFile = (
+  id: number,
+  data: Partial<{
+    name: string
+    content_type: string
+    size: number
+    oss_url: string
+    path: string
+  }>
+) => {
+  const access = getTokenCookies().access
+  return Alova.Post<FileUpdateResponse>(
+    `/file/${id}/update/`,
+    data,
+    {
+      headers: access ? { Authorization: `Bearer ${access}` } : undefined,
+    }
+  )
+}
+
+// (legacy variations removed)

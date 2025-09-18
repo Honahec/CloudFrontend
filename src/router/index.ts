@@ -36,6 +36,12 @@ const router = createRouter({
           component: () => import('@/views/drive/index.vue'),
         },
         {
+          // support nested path like /drive/path/to/folder
+          path: '/drive/:pathMatch(.*)*',
+          name: 'DrivePath',
+          component: () => import('@/views/drive/index.vue'),
+        },
+        {
           path: '/settings',
           name: 'Settings',
           component: () => import('@/views/settings/index.vue'),
