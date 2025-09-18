@@ -4,26 +4,22 @@
       <h5 class="mb-2">CloudFrontend</h5>
       <el-menu
         default-active="2"
-        class="el-menu-vertical-demo"
+        class="el-menu"
         @open="handleOpen"
         @close="handleClose"
       >
-        <el-menu-item index="1">
-          <el-icon><IconMenu /></el-icon>
+        <el-menu-item index="1" @click="$router.push('/drive')">
+          <el-icon><IMessageBox /></el-icon>
           <span>Drive</span>
-        </el-menu-item>
-        <el-menu-item index="2">
-          <el-icon><Setting /></el-icon>
-          <span>Settings</span>
         </el-menu-item>
       </el-menu>
 
       <el-button
         class="get-started"
         type="primary"
-        @click="access ? $router.push('/settings') : $router.push('/login')"
+        @click="isLoggedIn ? $router.push('/settings') : $router.push('/login')"
       >
-        {{ access ? displayName : 'Get Started' }}
+        {{ isLoggedIn ? displayName : 'Get Started' }}
       </el-button>
     </el-aside>
 
@@ -35,11 +31,11 @@
 </template>
 
 <script lang="ts" setup>
-import { Menu as IconMenu, Setting } from '@element-plus/icons-vue'
+import { MessageBox as IMessageBox } from '@element-plus/icons-vue'
 import { ref, onMounted } from 'vue'
 import type { UserInfo } from '@/api/users/type'
 import { getUserInfo, refreshAccessToken } from '@/api/users/api'
-import { getTokenCookies } from '@/utils/userUtils'
+import { getTokenCookies, setTokenCookies } from '@/utils/userUtils'
 
 const handleOpen = (key: string, keyPath: string[]) => {
   console.log(key, keyPath)
@@ -49,24 +45,19 @@ const handleClose = (key: string, keyPath: string[]) => {
 }
 //UserInfo
 const isLoggedIn = ref(false)
-const user = ref<UserInfo | null>(null)
 const userName = ref('')
 const displayName = ref('')
 
-// token check
-const access = getTokenCookies().access
-
 //init
 onMounted(async () => {
-  console.log(access)
-  try {
+  const refreshTokens = await refreshAccessToken()
+  if (getTokenCookies().access) {
+    setTokenCookies(refreshTokens.access, refreshTokens.refresh)
     const res = await getUserInfo()
-    user.value = res
     userName.value = res.user.username
     displayName.value = res.user.display_name
     isLoggedIn.value = true
-    refreshAccessToken()
-  } catch (e) {
+  } else {
     isLoggedIn.value = false
   }
 })
