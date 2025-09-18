@@ -97,7 +97,7 @@ async function fetchFiles() {
   try {
     let path = currentPath.value
     if (!path) path = '/'
-    else if (!path.startsWith('/')) path = '/' + path
+    else if (!path.endsWith('/')) path = path + '/'
     const req = listFilesByPath(path)
     const data = await req.send()
     files.value = Array.isArray((data as any)?.files) ? (data as any).files : []
@@ -225,7 +225,6 @@ async function onUpload() {
       // 3) 通知后端的 path（以 / 开头，非根需以 / 结尾）
       let notifyPath = currentPath.value || '/'
       if (!notifyPath.startsWith('/')) notifyPath = '/' + notifyPath
-      if (!notifyPath.endsWith('/')) notifyPath = notifyPath + '/'
       if (notifyPath !== '/' && !notifyPath.endsWith('/')) notifyPath += '/'
 
       // 4) 直传 OSS 然后通知后端
