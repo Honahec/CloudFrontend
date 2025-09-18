@@ -1,5 +1,3 @@
-import type { userLoginQuery } from '@/api/users/type'
-
 function parseJwtPayload(token: string): any {
   const payloadPart = token.split('.')[1]
   if (!payloadPart) throw new Error('Invalid JWT')
@@ -30,6 +28,7 @@ export function setTokenCookies(accessToken: string, refreshToken: string) {
     )}; Max-Age=${accessDelta}; Path=/`
   } catch {
     removeTokenCookies()
+    console.error('Failed to set access token cookie')
     return
   }
 

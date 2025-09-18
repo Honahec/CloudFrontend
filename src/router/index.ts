@@ -1,4 +1,5 @@
 import { createRouter, createWebHistory } from 'vue-router'
+import { getTokenCookies } from '@/utils/userUtils'
 
 import Layout from '@/layout/index.vue'
 
@@ -42,6 +43,15 @@ const router = createRouter({
       ],
     },
   ],
+})
+
+// Require auth for all routes except '/', '/login', '/register'
+const whiteList = ['/', '/login', '/register']
+router.beforeEach((to, _from, next) => {
+  if (whiteList.includes(to.path)) return next()
+  const { access, refresh } = getTokenCookies()
+  if (access && refresh) return next()
+  next({ path: '/login', query: { redirect: to.fullPath } })
 })
 
 export default router

@@ -1,10 +1,16 @@
 import { Alova } from '@/utils/alova/index'
-import type { UserInfo, userLoginQuery, userRegisterQuery } from './type'
+import type {
+  GetUserInfo,
+  refreshToken,
+  UserInfo,
+  userLoginQuery,
+  userRegisterQuery,
+} from './type'
 import { getTokenCookies } from '@/utils/userUtils'
 
 export const getUserInfo = () => {
   const access = getTokenCookies().access
-  return Alova.Get<UserInfo>('/user/profile/', {
+  return Alova.Get<GetUserInfo>('/user/profile/', {
     headers: {
       Authorization: `Bearer ${access}`,
     },
@@ -18,7 +24,7 @@ export const userLogin = (params: userLoginQuery = {} as userLoginQuery) => {
 export const refreshAccessToken = () => {
   const access = getTokenCookies().access
   const refresh = getTokenCookies().refresh
-  return Alova.Post(
+  return Alova.Post<refreshToken>(
     '/user/refresh-token/',
     { refresh: refresh },
     {
@@ -27,6 +33,18 @@ export const refreshAccessToken = () => {
       },
     }
   )
+}
+
+export const changePassword = (params: {
+  old_password: string
+  new_password: string
+}) => {
+  const access = getTokenCookies().access
+  return Alova.Post('/user/change-password/', params, {
+    headers: {
+      Authorization: `Bearer ${access}`,
+    },
+  })
 }
 
 export const userRegister = (

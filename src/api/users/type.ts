@@ -10,6 +10,14 @@ export interface UserInfo {
   access: string
   refresh: string
 }
+export interface GetUserInfo {
+  id: number
+  username: string
+  display_name: string
+  email: string
+  is_active: boolean
+  permission: string
+}
 export interface userRegisterQuery {
   username: string
   email: string
