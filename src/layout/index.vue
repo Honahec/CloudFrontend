@@ -21,9 +21,9 @@
       <el-button
         class="get-started"
         type="primary"
-        @click="isLoggedIn ? $router.push('/login') : $router.push('/settings')"
+        @click="access ? $router.push('/settings') : $router.push('/login')"
       >
-        {{ isLoggedIn ? 'Get Started' : userName }}
+        {{ access ? displayName : 'Get Started' }}
       </el-button>
     </el-aside>
 
@@ -38,7 +38,8 @@
 import { Menu as IconMenu, Setting } from '@element-plus/icons-vue'
 import { ref, onMounted } from 'vue'
 import type { UserInfo } from '@/api/users/type'
-import { getUserInfo } from '@/api/users/api'
+import { getUserInfo, refreshAccessToken } from '@/api/users/api'
+import { getTokenCookies } from '@/utils/userUtils'
 
 const handleOpen = (key: string, keyPath: string[]) => {
   console.log(key, keyPath)
@@ -52,14 +53,19 @@ const user = ref<UserInfo | null>(null)
 const userName = ref('')
 const displayName = ref('')
 
+// token check
+const access = getTokenCookies().access
+
 //init
 onMounted(async () => {
+  console.log(access)
   try {
     const res = await getUserInfo()
     user.value = res
-    userName.value = res.username
-    displayName.value = res.display_name
+    userName.value = res.user.username
+    displayName.value = res.user.display_name
     isLoggedIn.value = true
+    refreshAccessToken()
   } catch (e) {
     isLoggedIn.value = false
   }

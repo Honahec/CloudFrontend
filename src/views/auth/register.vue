@@ -31,7 +31,10 @@
 import { ref } from 'vue'
 import { userRegister, userLogin } from '@/api/users/api'
 import type { userLoginQuery, userRegisterQuery } from '@/api/users/type'
+import { setTokenCookies } from '@/utils/userUtils'
+import { useRouter } from 'vue-router'
 
+const router = useRouter()
 const registerForm = ref<userRegisterQuery>({
   username: '',
   password: '',
@@ -48,7 +51,9 @@ const onSubmit = () => {
 const doRegister = async (registerForm: userRegisterQuery) => {
   try {
     const res = await userRegister(registerForm)
+    setTokenCookies(res.access, res.refresh)
     console.log('注册成功', res)
+    router.replace('/drive')
   } catch (err) {
     console.error('注册失败', err)
   }
