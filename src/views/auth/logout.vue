@@ -7,13 +7,9 @@ import { removeTokenCookies } from '@/utils/userUtils'
 
 const router = useRouter()
 
-function logout() {
+onMounted(async () => {
+  await userLogout()
   removeTokenCookies()
-  userLogout()
-}
-
-onMounted(() => {
-  logout()
   router.replace('/')
 })
 </script>

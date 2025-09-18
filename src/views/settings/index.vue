@@ -101,7 +101,7 @@
         <el-button type="primary" @click="onEmailSave">Save</el-button>
       </template>
     </el-dialog>
-    
+
     <!-- Change Display Name Dialog -->
     <el-dialog v-model="nameVisible" title="Change Display Name" width="420px">
       <el-form
@@ -111,7 +111,10 @@
         label-width="140px"
       >
         <el-form-item label="Display Name" prop="display_name">
-          <el-input v-model="nameForm.display_name" placeholder="New display name" />
+          <el-input
+            v-model="nameForm.display_name"
+            placeholder="New display name"
+          />
         </el-form-item>
       </el-form>
       <template #footer>
@@ -125,7 +128,13 @@
 <script lang="ts" setup>
 import { ref, onMounted } from 'vue'
 import type { FormInstance, FormRules } from 'element-plus'
-import { getUserInfo } from '@/api/users/api'
+import { ElMessage } from 'element-plus'
+import {
+  getUserInfo,
+  changePassword as apiChangePassword,
+  updateEmail as apiUpdateEmail,
+  updateDisplayName as apiUpdateDisplayName,
+} from '@/api/users/api'
 
 // Password dialog state and form
 const pwdVisible = ref(false)
@@ -164,8 +173,25 @@ const pwdRules: FormRules = {
 const onPwdSave = () => {
   pwdFormRef.value?.validate((ok) => {
     if (!ok) return
-    // No API; just close for now
-    pwdVisible.value = false
+    apiChangePassword({
+      old_password: pwdForm.value.old_password,
+      new_password: pwdForm.value.new_password,
+    })
+      .then(() => {
+        ElMessage.success('Password updated')
+        pwdVisible.value = false
+        pwdForm.value = {
+          old_password: '',
+          new_password: '',
+          confirm_password: '',
+        }
+      })
+      .catch((err: any) => {
+        const msg = (err?.response?.data?.msg ||
+          err?.message ||
+          'Failed to update password') as string
+        ElMessage.error(msg)
+      })
   })
 }
 
@@ -189,8 +215,19 @@ const onEmailCancel = () => {
 const onEmailSave = () => {
   emailFormRef.value?.validate((ok) => {
     if (!ok) return
-    // No API; just close for now
-    emailVisible.value = false
+    apiUpdateEmail({ email: emailForm.value.email })
+      .then(async () => {
+        ElMessage.success('Email updated')
+        emailVisible.value = false
+        const res = await getUserInfo()
+        email.value = res.email
+      })
+      .catch((err: any) => {
+        const msg = (err?.response?.data?.msg ||
+          err?.message ||
+          'Failed to update email') as string
+        ElMessage.error(msg)
+      })
   })
 }
 
@@ -214,9 +251,20 @@ const onNameCancel = () => {
 const onNameSave = () => {
   nameFormRef.value?.validate((ok) => {
     if (!ok) return
-    // No API; just reflect in UI and close
-    displayName.value = nameForm.value.display_name
-    nameVisible.value = false
+    apiUpdateDisplayName({ display_name: nameForm.value.display_name })
+      .then(async () => {
+        ElMessage.success('Display name updated')
+        nameVisible.value = false
+        // refresh profile
+        const res = await getUserInfo()
+        displayName.value = res.display_name
+      })
+      .catch((err: any) => {
+        const msg = (err?.response?.data?.msg ||
+          err?.message ||
+          'Failed to update display name') as string
+        ElMessage.error(msg)
+      })
   })
 }
 const displayName = ref('')

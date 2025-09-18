@@ -1,6 +1,7 @@
 import { Alova } from '@/utils/alova/index'
 import type {
   GetUserInfo,
+  logoutStatus,
   refreshToken,
   UserInfo,
   userLoginQuery,
@@ -40,7 +41,25 @@ export const changePassword = (params: {
   new_password: string
 }) => {
   const access = getTokenCookies().access
-  return Alova.Post('/user/change-password/', params, {
+  return Alova.Post<logoutStatus>('/user/change-password/', params, {
+    headers: {
+      Authorization: `Bearer ${access}`,
+    },
+  })
+}
+
+export const updateEmail = (params: { email: string }) => {
+  const access = getTokenCookies().access
+  return Alova.Post<GetUserInfo>('/user/update-email/', params, {
+    headers: {
+      Authorization: `Bearer ${access}`,
+    },
+  })
+}
+
+export const updateDisplayName = (params: { display_name: string }) => {
+  const access = getTokenCookies().access
+  return Alova.Post<GetUserInfo>('/user/update-display-name/', params, {
     headers: {
       Authorization: `Bearer ${access}`,
     },
@@ -55,7 +74,7 @@ export const userRegister = (
 export const userLogout = () => {
   const access = getTokenCookies().access
   const refresh = getTokenCookies().refresh
-  return Alova.Post(
+  return Alova.Post<logoutStatus>(
     '/user/logout/',
     { refresh: refresh },
     {

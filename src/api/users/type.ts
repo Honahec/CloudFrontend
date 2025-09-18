@@ -45,3 +45,6 @@ export interface updateEmailQuery {
 export interface updateDisplayNameQuery {
   display_name: string
 }
+export interface logoutStatus {
+  status: string
+}
