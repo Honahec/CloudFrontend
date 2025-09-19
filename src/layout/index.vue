@@ -1,80 +1,84 @@
 <template>
-  <el-container class="layout">
-    <el-aside class="sidebar" width="200px">
-      <h5 class="mb-2">CloudFrontend</h5>
-      <el-menu
-        :default-active="$route.path"
-        class="el-menu"
-        router
-        @open="handleOpen"
-        @close="handleClose"
-      >
-        <el-menu-item index="/drive">
-          <el-icon><IMessageBox /></el-icon>
-          <span>Drive</span>
-        </el-menu-item>
-      </el-menu>
-
-      <div class="get-started">
-        <template v-if="isLoggedIn">
-          <el-dropdown
-            trigger="click"
-            placement="top-start"
-            @command="onUserMenuCommand"
-            @visible-change="onUserDropdownVisibleChange"
-          >
-            <div class="user-trigger" ref="userTriggerRef">
-              <el-button type="primary" class="user-button">
-                {{ displayName }}
-              </el-button>
-            </div>
-            <template #dropdown>
-              <el-dropdown-menu :style="{ width: userMenuWidth + 'px' }">
-                <el-dropdown-item command="settings">Settings</el-dropdown-item>
-                <el-dropdown-item command="logout">Logout</el-dropdown-item>
-              </el-dropdown-menu>
-            </template>
-          </el-dropdown>
-        </template>
-        <template v-else>
-          <div class="user-trigger">
-            <el-button
-              type="primary"
-              class="user-button"
-              @click="$router.push('/login')"
+  <n-layout has-sider class="h-screen">
+    <n-layout-sider
+      class="flex flex-col justify-between gap-3 box-border p-3 pr-2 border-r border-gray-200 h-screen"
+      width="200"
+      bordered
+    >
+      <div class="flex flex-col justify-between min-h-full h-full">
+        <div>
+          <h5 class="mb-2 font-semibold">CloudFrontend</h5>
+          <n-menu
+            :value="activeMenu"
+            :options="menuOptions"
+            @update:value="onMenuSelect"
+          />
+        </div>
+        <div class="mt-auto pb-2">
+          <template v-if="isLoggedIn">
+            <n-dropdown
+              trigger="click"
+              placement="top-start"
+              :options="userMenuOptions"
+              width="trigger"
+              @select="onUserMenuSelect"
             >
-              Get Started
-            </el-button>
-          </div>
-        </template>
+              <div class="w-full">
+                <n-button type="primary" block>
+                  {{ displayName || userName || 'Account' }}
+                </n-button>
+              </div>
+            </n-dropdown>
+          </template>
+          <template v-else>
+            <n-dropdown
+              trigger="click"
+              placement="top-start"
+              :options="authMenuOptions"
+              width="trigger"
+              @select="onAuthMenuSelect"
+            >
+              <div class="w-full">
+                <n-button type="primary" block> Get Started </n-button>
+              </div>
+            </n-dropdown>
+          </template>
+        </div>
       </div>
-    </el-aside>
+    </n-layout-sider>
 
-    <el-main class="content">
-      <!-- 页面右侧内容区域（示例为路由视图） -->
+    <n-layout-content class="p-4 box-border overflow-auto">
       <router-view />
-    </el-main>
-  </el-container>
+    </n-layout-content>
+  </n-layout>
 </template>
 
 <script lang="ts" setup>
-import { MessageBox as IMessageBox } from '@element-plus/icons-vue'
-import { ref, onMounted, nextTick } from 'vue'
+import { ref, onMounted, computed } from 'vue'
+import type { MenuOption } from 'naive-ui'
 import { getUserInfo, refreshAccessToken } from '@/api/users/api'
 import { getTokenCookies, setTokenCookies } from '@/utils/userUtils'
 import { useRouter } from 'vue-router'
 
-const handleOpen = (key: string, keyPath: string[]) => {
-  console.log(key, keyPath)
+// menu
+const menuOptions: MenuOption[] = [{ label: 'Drive', key: '/drive' }]
+const router = useRouter()
+const onMenuSelect = (key: string) => {
+  if (key && key !== router.currentRoute.value.path) router.push(key)
 }
-const handleClose = (key: string, keyPath: string[]) => {
-  console.log(key, keyPath)
-}
+
+// keep menu active on nested routes
+const activeMenu = computed(() => {
+  const path = router.currentRoute.value.path
+  if (path.startsWith('/drive')) return '/drive'
+  return path
+})
+
 //UserInfo
 const isLoggedIn = ref(false)
 const userName = ref('')
 const displayName = ref('')
-// init
+
 onMounted(async () => {
   try {
     const { access, refresh } = getTokenCookies()
@@ -86,7 +90,6 @@ onMounted(async () => {
         console.warn('Token refresh failed, using existing token')
       }
       const res = await getUserInfo()
-      // API returns { user: {...}, access, refresh }
       userName.value =
         (res as any).user?.username ?? (res as any).username ?? ''
       displayName.value =
@@ -100,47 +103,22 @@ onMounted(async () => {
   }
 })
 
-// dropdown commands
-const router = useRouter()
-const onUserMenuCommand = (cmd: string) => {
-  if (cmd === 'settings') router.push('/settings')
-  else if (cmd === 'logout') router.push('/logout')
+// user dropdown
+const userMenuOptions: MenuOption[] = [
+  { label: 'Settings', key: 'settings' },
+  { label: 'Logout', key: 'logout' },
+]
+const onUserMenuSelect = (key: string) => {
+  if (key === 'settings') router.push('/settings')
+  else if (key === 'logout') router.push('/logout')
 }
 
-// sync dropdown width with trigger width
-const userTriggerRef = ref<HTMLElement | null>(null)
-const userMenuWidth = ref(0)
-const onUserDropdownVisibleChange = async (visible: boolean) => {
-  if (visible) {
-    await nextTick()
-    userMenuWidth.value = userTriggerRef.value?.offsetWidth || 0
-  }
+const authMenuOptions: MenuOption[] = [
+  { label: 'Register', key: 'register' },
+  { label: 'Login', key: 'login' },
+]
+const onAuthMenuSelect = (key: string) => {
+  if (key === 'register') router.push('/register')
+  else if (key === 'login') router.push('/login')
 }
 </script>
-<style scoped>
-.layout {
-  height: 100vh;
-}
-.sidebar {
-  display: flex;
-  flex-direction: column;
-  gap: 12px;
-  padding: 12px 8px;
-  box-sizing: border-box;
-  border-right: 1px solid var(--el-border-color-light);
-}
-.get-started {
-  margin-top: auto;
-}
-.user-trigger {
-  width: 175px;
-}
-.user-button {
-  width: 175px;
-}
-.content {
-  padding: 16px;
-  box-sizing: border-box;
-  overflow: auto;
-}
-</style>
