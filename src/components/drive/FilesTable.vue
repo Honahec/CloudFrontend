@@ -1,47 +1,26 @@
 <template>
-  <el-empty v-if="loading && files.length === 0" description="Loading..." />
-  <el-empty v-else-if="!loading && files.length === 0" description="No files" />
+  <n-empty v-if="loading && files.length === 0" description="Loading..." />
+  <n-empty v-else-if="!loading && files.length === 0" description="No files" />
 
-  <el-table
+  <n-data-table
     v-else
     :data="files"
-    border
-    class="file-table"
+    :columns="columns"
+    :loading="loading"
     :row-key="rowKey"
-    @selection-change="(rows:any) => emit('selection-change', rows as FileRecord[])"
-  >
-    <el-table-column type="selection" width="48" />
-    <el-table-column prop="name" label="File Name" min-width="280">
-      <template #default="{ row }">
-        <a class="file-link" href="#" @click.prevent="emit('open', row as FileRecord)">
-          {{ (row as FileRecord).name }}
-        </a>
-      </template>
-    </el-table-column>
-    <el-table-column prop="content_type" label="Content Type" width="200" />
-    <el-table-column prop="size" label="Size" width="140">
-      <template #default="{ row }">{{ formatSize((row as FileRecord).size) }}</template>
-    </el-table-column>
-    <el-table-column prop="created_at" label="Created" width="220" />
-    <el-table-column label="Actions" min-width="200">
-      <template #default="{ row }">
-        <el-space size="small">
-          <el-button link type="primary" @click="emit('download', row as FileRecord)">
-            Download
-          </el-button>
-          <el-button link type="danger" @click="emit('delete', row as FileRecord)">
-            Delete
-          </el-button>
-        </el-space>
-      </template>
-    </el-table-column>
-  </el-table>
+    :single-line="false"
+    class="file-table"
+    @update:checked-row-keys="onCheckedKeys"
+  />
 </template>
 
 <script lang="ts" setup>
+import { h, ref, computed } from 'vue'
+import type { DataTableColumns, DataTableRowKey } from 'naive-ui'
+import { NButton } from 'naive-ui'
 import type { FileRecord } from '@/api/files/type'
 
-defineProps<{
+const props = defineProps<{
   files: FileRecord[]
   loading: boolean
 }>()
@@ -62,17 +41,71 @@ function formatSize(size: number) {
   if (size < 1024 * 1024 * 1024) return `${(size / 1024 / 1024).toFixed(1)} MB`
   return `${(size / 1024 / 1024 / 1024).toFixed(1)} GB`
 }
+
+const columns = computed<DataTableColumns<FileRecord>>(() => [
+  { type: 'selection', multiple: true, width: 48 },
+  {
+    title: 'File Name',
+    key: 'name',
+    minWidth: 280,
+    render: (row) =>
+      h(
+        NButton,
+        {
+          text: true,
+          type: 'primary',
+          onClick: () => emit('open', row),
+        },
+        { default: () => row.name }
+      ),
+  },
+  { title: 'Content Type', key: 'content_type', width: 200 },
+  {
+    title: 'Size',
+    key: 'size',
+    width: 140,
+    render: (row) => formatSize(row.size as any),
+  },
+  { title: 'Created', key: 'created_at', width: 220 },
+  {
+    title: 'Actions',
+    key: 'actions',
+    minWidth: 200,
+    render: (row) => [
+      h(
+        NButton,
+        {
+          text: true,
+          type: 'primary',
+          onClick: () => emit('download', row),
+          style: { marginRight: '8px' },
+        },
+        { default: () => 'Download' }
+      ),
+      h(
+        NButton,
+        { text: true, type: 'error', onClick: () => emit('delete', row) },
+        { default: () => 'Delete' }
+      ),
+    ],
+  },
+])
+
+const onCheckedKeys = (keys: Array<DataTableRowKey>) => {
+  const map = new Map(
+    props.files.map((r) => [r.id as any as DataTableRowKey, r])
+  )
+  const rows: FileRecord[] = []
+  keys.forEach((k) => {
+    const r = map.get(k)
+    if (r) rows.push(r)
+  })
+  emit('selection-change', rows)
+}
 </script>
 
 <style scoped>
-.file-table :deep(.cell) {
+.file-table :deep(.n-data-table-td) {
   white-space: nowrap;
 }
-.file-link {
-  color: var(--el-color-primary);
-}
-.file-link:hover {
-  text-decoration: underline;
-}
 </style>
-

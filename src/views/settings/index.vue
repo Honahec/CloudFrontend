@@ -1,134 +1,80 @@
 <template>
   <div class="settings">
-    <el-row :gutter="32" align="middle" class="row">
-      <el-col :span="10">
-        <el-card shadow="never" class="profile-card">
-          <div class="avatar-wrap">
-            <el-avatar class="avatar" shape="circle" :size="180">D</el-avatar>
-          </div>
-          <div class="name-wrap">
-            <div class="display-name">{{ displayName }}</div>
-            <div class="username">{{ username }}</div>
-          </div>
-          <el-button
-            type="primary"
-            plain
-            class="change-password"
-            @click="openPwdDialog"
-            >Change Password</el-button
-          >
-          <el-button
-            type="primary"
-            plain
-            class="change-display-name"
-            @click="openNameDialog"
-            >Change Display Name</el-button
-          >
-        </el-card>
-      </el-col>
-      <el-col :span="14">
-        <el-card shadow="never" class="email-card">
-          <div class="email-header">
-            <div class="email-title">Email</div>
-            <el-button
-              type="primary"
-              plain
-              class="edit-email"
-              @click="openEmailDialog"
-              >Edit</el-button
-            >
-          </div>
-          <el-input
-            class="email-input"
-            disabled
-            :model-value="email"
-            placeholder="name@example.com"
-          />
-        </el-card>
-      </el-col>
-    </el-row>
+    <div class="grid">
+      <div class="profile-card n-card">
+        <div class="avatar-wrap">
+          <n-avatar class="avatar" round :size="180">{{ initials }}</n-avatar>
+        </div>
+        <div class="name-wrap">
+          <div class="display-name">{{ displayName }}</div>
+          <div class="username">{{ username }}</div>
+        </div>
+        <n-space>
+          <n-button tertiary type="primary" @click="openPwdDialog">Change Password</n-button>
+          <n-button tertiary type="primary" @click="openNameDialog">Change Display Name</n-button>
+        </n-space>
+      </div>
 
-    <!-- Change Password Dialog -->
-    <el-dialog v-model="pwdVisible" title="Change Password" width="420px">
-      <el-form
-        ref="pwdFormRef"
-        :model="pwdForm"
-        :rules="pwdRules"
-        label-width="140px"
-      >
-        <el-form-item label="Old Password" prop="old_password">
-          <el-input
-            v-model="pwdForm.old_password"
-            type="password"
-            placeholder="Old password"
-          />
-        </el-form-item>
-        <el-form-item label="New Password" prop="new_password">
-          <el-input
-            v-model="pwdForm.new_password"
-            type="password"
-            placeholder="New password"
-          />
-        </el-form-item>
-        <el-form-item label="Confirm" prop="confirm_password">
-          <el-input
-            v-model="pwdForm.confirm_password"
-            type="password"
-            placeholder="Confirm new password"
-          />
-        </el-form-item>
-      </el-form>
-      <template #footer>
-        <el-button @click="onPwdCancel">Cancel</el-button>
-        <el-button type="primary" @click="onPwdSave">Save</el-button>
-      </template>
-    </el-dialog>
+      <div class="email-card n-card">
+        <div class="email-header">
+          <div class="email-title">Email</div>
+          <n-button tertiary type="primary" @click="openEmailDialog">Edit</n-button>
+        </div>
+        <n-input class="email-input" disabled :value="email" placeholder="name@example.com" />
+      </div>
+    </div>
 
-    <!-- Change Email Dialog -->
-    <el-dialog v-model="emailVisible" title="Change Email" width="420px">
-      <el-form
-        ref="emailFormRef"
-        :model="emailForm"
-        :rules="emailRules"
-        label-width="120px"
-      >
-        <el-form-item label="New Email" prop="email">
-          <el-input v-model="emailForm.email" placeholder="name@example.com" />
-        </el-form-item>
-      </el-form>
-      <template #footer>
-        <el-button @click="onEmailCancel">Cancel</el-button>
-        <el-button type="primary" @click="onEmailSave">Save</el-button>
-      </template>
-    </el-dialog>
+    <!-- Password Modal -->
+    <n-modal v-model:show="pwdVisible" preset="card" title="Change Password" :style="{ width: '420px' }">
+      <n-form ref="pwdFormRef" :model="pwdForm" :rules="pwdRules" label-placement="top">
+        <n-form-item label="Old Password" path="old_password">
+          <n-input v-model:value="pwdForm.old_password" type="password" placeholder="Old password" />
+        </n-form-item>
+        <n-form-item label="New Password" path="new_password">
+          <n-input v-model:value="pwdForm.new_password" type="password" placeholder="New password" />
+        </n-form-item>
+        <n-form-item label="Confirm" path="confirm_password">
+          <n-input v-model:value="pwdForm.confirm_password" type="password" placeholder="Confirm new password" />
+        </n-form-item>
+        <div class="modal-actions">
+          <n-button @click="onPwdCancel">Cancel</n-button>
+          <n-button type="primary" @click="onPwdSave">Save</n-button>
+        </div>
+      </n-form>
+    </n-modal>
 
-    <!-- Change Display Name Dialog -->
-    <el-dialog v-model="nameVisible" title="Change Display Name" width="420px">
-      <el-form
-        ref="nameFormRef"
-        :model="nameForm"
-        :rules="nameRules"
-        label-width="140px"
-      >
-        <el-form-item label="Display Name" prop="display_name">
-          <el-input
-            v-model="nameForm.display_name"
-            placeholder="New display name"
-          />
-        </el-form-item>
-      </el-form>
-      <template #footer>
-        <el-button @click="onNameCancel">Cancel</el-button>
-        <el-button type="primary" @click="onNameSave">Save</el-button>
-      </template>
-    </el-dialog>
+    <!-- Email Modal -->
+    <n-modal v-model:show="emailVisible" preset="card" title="Change Email" :style="{ width: '420px' }">
+      <n-form ref="emailFormRef" :model="emailForm" :rules="emailRules" label-placement="top">
+        <n-form-item label="New Email" path="email">
+          <n-input v-model:value="emailForm.email" placeholder="name@example.com" />
+        </n-form-item>
+        <div class="modal-actions">
+          <n-button @click="onEmailCancel">Cancel</n-button>
+          <n-button type="primary" @click="onEmailSave">Save</n-button>
+        </div>
+      </n-form>
+    </n-modal>
+
+    <!-- Display Name Modal -->
+    <n-modal v-model:show="nameVisible" preset="card" title="Change Display Name" :style="{ width: '420px' }">
+      <n-form ref="nameFormRef" :model="nameForm" :rules="nameRules" label-placement="top">
+        <n-form-item label="Display Name" path="display_name">
+          <n-input v-model:value="nameForm.display_name" placeholder="New display name" />
+        </n-form-item>
+        <div class="modal-actions">
+          <n-button @click="onNameCancel">Cancel</n-button>
+          <n-button type="primary" @click="onNameSave">Save</n-button>
+        </div>
+      </n-form>
+    </n-modal>
   </div>
 </template>
 
 <script lang="ts" setup>
-import { ref, onMounted } from 'vue'
-import type { FormInstance, FormRules } from 'element-plus'
-import { ElMessage } from 'element-plus'
+import { computed, ref, onMounted } from 'vue'
+import type { FormInst, FormRules } from 'naive-ui'
+import { useMessage } from 'naive-ui'
 import {
   getUserInfo,
   changePassword as apiChangePassword,
@@ -137,8 +83,10 @@ import {
 } from '@/api/users/api'
 
 // Password dialog state and form
+const message = useMessage()
+
 const pwdVisible = ref(false)
-const pwdFormRef = ref<FormInstance>()
+const pwdFormRef = ref<FormInst | null>(null)
 const pwdForm = ref({
   old_password: '',
   new_password: '',
@@ -161,43 +109,33 @@ const pwdRules: FormRules = {
   confirm_password: [
     { required: true, message: 'Please confirm new password', trigger: 'blur' },
     {
-      validator: (_r, v, cb) => {
-        if (v !== pwdForm.value.new_password)
-          cb(new Error('Passwords do not match'))
-        else cb()
-      },
+      validator: (_r, v) => v === pwdForm.value.new_password,
+      message: 'Passwords do not match',
       trigger: 'blur',
     },
   ],
 }
 const onPwdSave = () => {
-  pwdFormRef.value?.validate((ok) => {
-    if (!ok) return
+  pwdFormRef.value?.validate().then(() => {
     apiChangePassword({
       old_password: pwdForm.value.old_password,
       new_password: pwdForm.value.new_password,
     })
       .then(() => {
-        ElMessage.success('Password updated')
+        message.success('Password updated')
         pwdVisible.value = false
-        pwdForm.value = {
-          old_password: '',
-          new_password: '',
-          confirm_password: '',
-        }
+        pwdForm.value = { old_password: '', new_password: '', confirm_password: '' }
       })
       .catch((err: any) => {
-        const msg = (err?.response?.data?.msg ||
-          err?.message ||
-          'Failed to update password') as string
-        ElMessage.error(msg)
+        const msg = (err?.response?.data?.msg || err?.message || 'Failed to update password') as string
+        message.error(msg)
       })
   })
 }
 
 // Email dialog state and form
 const emailVisible = ref(false)
-const emailFormRef = ref<FormInstance>()
+const emailFormRef = ref<FormInst | null>(null)
 const emailForm = ref({ email: '' })
 const emailRules: FormRules = {
   email: [
@@ -213,27 +151,24 @@ const onEmailCancel = () => {
   emailForm.value.email = ''
 }
 const onEmailSave = () => {
-  emailFormRef.value?.validate((ok) => {
-    if (!ok) return
+  emailFormRef.value?.validate().then(() => {
     apiUpdateEmail({ email: emailForm.value.email })
       .then(async () => {
-        ElMessage.success('Email updated')
+        message.success('Email updated')
         emailVisible.value = false
         const res = await getUserInfo()
         email.value = res.email
       })
       .catch((err: any) => {
-        const msg = (err?.response?.data?.msg ||
-          err?.message ||
-          'Failed to update email') as string
-        ElMessage.error(msg)
+        const msg = (err?.response?.data?.msg || err?.message || 'Failed to update email') as string
+        message.error(msg)
       })
   })
 }
 
 // Display name dialog state and form
 const nameVisible = ref(false)
-const nameFormRef = ref<FormInstance>()
+const nameFormRef = ref<FormInst | null>(null)
 const nameForm = ref({ display_name: '' })
 const nameRules: FormRules = {
   display_name: [
@@ -249,27 +184,24 @@ const onNameCancel = () => {
   nameForm.value.display_name = ''
 }
 const onNameSave = () => {
-  nameFormRef.value?.validate((ok) => {
-    if (!ok) return
+  nameFormRef.value?.validate().then(() => {
     apiUpdateDisplayName({ display_name: nameForm.value.display_name })
       .then(async () => {
-        ElMessage.success('Display name updated')
+        message.success('Display name updated')
         nameVisible.value = false
-        // refresh profile
         const res = await getUserInfo()
         displayName.value = res.display_name
       })
       .catch((err: any) => {
-        const msg = (err?.response?.data?.msg ||
-          err?.message ||
-          'Failed to update display name') as string
-        ElMessage.error(msg)
+        const msg = (err?.response?.data?.msg || err?.message || 'Failed to update display name') as string
+        message.error(msg)
       })
   })
 }
 const displayName = ref('')
 const username = ref('')
 const email = ref('')
+const initials = computed(() => (displayName.value || username.value || 'U').trim().slice(0, 1).toUpperCase())
 
 onMounted(async () => {
   const res = await getUserInfo()
@@ -280,60 +212,19 @@ onMounted(async () => {
 </script>
 
 <style scoped>
-.settings {
-  padding: 16px;
-}
-.row {
-  min-height: 60vh;
-}
-.profile-card {
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  gap: 16px;
-  padding: 24px;
-}
-.avatar-wrap {
-  display: flex;
-  justify-content: center;
-}
-.avatar {
-  border: 2px solid var(--el-border-color);
-  font-size: 48px;
-}
-.name-wrap {
-  text-align: left;
-  width: 100%;
-}
-.display-name {
-  font-size: 28px;
-  font-weight: 600;
-  line-height: 1.2;
-}
-.username {
-  color: var(--el-text-color-secondary);
-}
-.change-password {
-  align-self: flex-start;
-}
-.change-display-name {
-  align-self: flex-start;
-}
-
-.email-card {
-  padding: 24px;
-}
-.email-header {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  margin-bottom: 12px;
-}
-.email-title {
-  font-size: 18px;
-  font-weight: 600;
-}
-.email-input {
-  max-width: 420px;
-}
+.settings { padding: 16px; }
+.grid { display: grid; grid-template-columns: 1fr 1fr; gap: 24px; align-items: start; }
+.n-card { border: 1px solid #eee; border-radius: 12px; padding: 24px; background: #fff; }
+.profile-card { display: flex; flex-direction: column; align-items: center; gap: 16px; }
+.avatar-wrap { display: flex; justify-content: center; }
+.avatar { border: 2px solid #e5e7eb; font-size: 48px; }
+.name-wrap { text-align: left; width: 100%; }
+.display-name { font-size: 28px; font-weight: 600; line-height: 1.2; }
+.username { color: #6b7280; }
+.email-card { padding: 24px; }
+.email-header { display: flex; align-items: center; justify-content: space-between; margin-bottom: 12px; }
+.email-title { font-size: 18px; font-weight: 600; }
+.email-input { max-width: 420px; }
+.modal-actions { display: flex; justify-content: flex-end; gap: 8px; margin-top: 12px; }
+@media (max-width: 960px) { .grid { grid-template-columns: 1fr; } }
 </style>

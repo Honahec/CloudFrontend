@@ -1,43 +1,43 @@
 <template>
   <div class="drive">
     <div class="toolbar">
-      <el-space wrap>
-        <el-button type="primary" plain @click="onNewFolder"
-          >New Folder</el-button
+      <n-space wrap>
+        <n-button tertiary type="primary" @click="onNewFolder"
+          >New Folder</n-button
         >
-        <el-button type="success" plain @click="onUpload">Upload</el-button>
-        <el-button
+        <n-button tertiary type="success" @click="onUpload">Upload</n-button>
+        <n-button
+          tertiary
           type="primary"
-          plain
           @click="onDownload"
           :disabled="selectedNonFolderCount === 0"
-          >Download</el-button
+          >Download</n-button
         >
-        <el-button
+        <n-button
+          tertiary
           type="primary"
-          plain
           @click="onMove"
           :disabled="selected.length === 0"
-          >Move</el-button
+          >Move</n-button
         >
-        <el-button
+        <n-button
+          tertiary
           type="primary"
-          plain
           @click="onRename"
           :disabled="selected.length !== 1"
-          >Rename</el-button
+          >Rename</n-button
         >
-        <el-button
-          type="danger"
-          plain
+        <n-button
+          tertiary
+          type="error"
           @click="onDelete"
           :disabled="selected.length === 0"
-          >Delete</el-button
+          >Delete</n-button
         >
-      </el-space>
+      </n-space>
     </div>
 
-    <el-divider class="divider" />
+    <n-divider class="divider" />
 
     <DriveBreadcrumb
       :segments="segments"
@@ -57,7 +57,7 @@
 </template>
 
 <script lang="ts" setup>
-import { computed, onMounted, ref, watch } from 'vue'
+import { computed, onMounted, ref, watch, h } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
 import {
   listFilesByPath,
@@ -70,12 +70,14 @@ import {
 import type { FileRecord } from '@/api/files/type'
 import DriveBreadcrumb from '@/components/drive/DriveBreadcrumb.vue'
 import FilesTable from '@/components/drive/FilesTable.vue'
-import { ElMessage, ElMessageBox } from 'element-plus'
+import { useMessage, useDialog, NInput } from 'naive-ui'
 import { uploadAndNotify } from '@/utils/fileUtils'
 import { md5 } from '@/utils/crypto/md5'
 
 const router = useRouter()
 const route = useRoute()
+const message = useMessage()
+const dialog = useDialog()
 
 const currentPath = computed(() => {
   const m = route.params.pathMatch
@@ -137,23 +139,19 @@ async function downloadRow(row: FileRecord) {
     triggerDownload(url, row.name)
   } catch (e) {
     console.error(e)
-    ElMessage.error('Download failed')
+    message.error('Download failed')
   }
 }
 async function deleteRow(row: FileRecord) {
-  const ok = await ElMessageBox.confirm(`Delete "${row.name}"?`, 'Delete', {
-    type: 'warning',
-    confirmButtonText: 'Delete',
-    cancelButtonText: 'Cancel',
-  }).catch(() => false)
+  const ok = await confirmDialog(`Delete "${row.name}"?`, 'Delete')
   if (!ok) return
   try {
     await deleteFile(row.id).send()
-    ElMessage.success('Deleted successfully')
+    message.success('Deleted successfully')
     await fetchFiles()
   } catch (e) {
     console.error(e)
-    ElMessage.error('Delete failed')
+    message.error('Delete failed')
   }
 }
 
@@ -177,7 +175,7 @@ async function onDownload() {
     })
   } catch (e) {
     console.error(e)
-    ElMessage.error('Download failed')
+    message.error('Download failed')
   }
 }
 
@@ -193,45 +191,40 @@ function triggerDownload(url: string, filename: string) {
 }
 async function onMove() {
   if (selected.value.length === 0) return
-  const { value, action } = await ElMessageBox.prompt(
-    'Destination path (e.g. /workspace/docs)',
+  const value = await promptDialog(
     'Move',
-    {
-      confirmButtonText: 'Move',
-      cancelButtonText: 'Cancel',
-      inputPlaceholder: '/target/path',
-    }
-  ).catch(() => ({ value: null, action: 'cancel' as const }))
-  if (!value || action !== 'confirm') return
+    'Destination path (e.g. /workspace/docs)',
+    '/target/path'
+  )
+  if (!value) return
   try {
     const dest = String(value)
     const normalized = dest.startsWith('/') ? dest : '/' + dest
     await Promise.all(
       selected.value.map((r) => updateFile(r.id, { path: normalized }).send())
     )
-    ElMessage.success('Moved successfully')
+    message.success('Moved successfully')
     await fetchFiles()
   } catch (e) {
     console.error(e)
-    ElMessage.error('Move failed')
+    message.error('Move failed')
   }
 }
 async function onDelete() {
   if (selected.value.length === 0) return
-  const ok = await ElMessageBox.confirm(
+  const ok = await confirmDialog(
     `Delete ${selected.value.length} item(s)?`,
-    'Delete',
-    { type: 'warning', confirmButtonText: 'Delete', cancelButtonText: 'Cancel' }
-  ).catch(() => false)
+    'Delete'
+  )
   if (!ok) return
   try {
     await Promise.all(selected.value.map((r) => deleteFile(r.id).send()))
-    ElMessage.success('Deleted successfully')
+    message.success('Deleted successfully')
     selected.value = []
     await fetchFiles()
   } catch (e) {
     console.error(e)
-    ElMessage.error('Delete failed')
+    message.error('Delete failed')
   }
 }
 async function onUpload() {
@@ -275,58 +268,106 @@ async function onUpload() {
         notifyPath,
       })
 
-      ElMessage.success('Uploaded successfully')
+      message.success('Uploaded successfully')
       await fetchFiles()
     } catch (e) {
       console.error(e)
-      ElMessage.error('Upload failed')
+      message.error('Upload failed')
     }
   }
   input.click()
 }
 
 async function onNewFolder() {
-  const { value, action } = await ElMessageBox.prompt(
-    'Folder name',
-    'New Folder',
-    {
-      confirmButtonText: 'Create',
-      cancelButtonText: 'Cancel',
-      inputPlaceholder: 'New folder',
-    }
-  ).catch(() => ({ value: null, action: 'cancel' as const }))
-  if (!value || action !== 'confirm') return
+  const value = await promptDialog('New Folder', 'Folder name', 'New folder')
+  if (!value) return
   try {
     let path = currentPath.value
     if (!path) path = '/'
     else if (!path.startsWith('/')) path = '/' + path
     await createFolder(path, String(value)).send()
-    ElMessage.success('Folder created')
+    message.success('Folder created')
     await fetchFiles()
   } catch (e) {
     console.error(e)
-    ElMessage.error('Create folder failed')
+    message.error('Create folder failed')
   }
 }
 
 async function onRename() {
   if (selected.value.length !== 1) return
   const target = selected.value[0]
-  const { value, action } = await ElMessageBox.prompt('New name', 'Rename', {
-    confirmButtonText: 'Rename',
-    cancelButtonText: 'Cancel',
-    inputValue: target.name,
-  }).catch(() => ({ value: null, action: 'cancel' as const }))
-  if (!value || action !== 'confirm') return
+  const value = await promptDialog('Rename', 'New name', target.name)
+  if (!value) return
   try {
     await updateFile(target.id, { name: String(value) }).send()
-    ElMessage.success('Renamed successfully')
+    message.success('Renamed successfully')
     selected.value = []
     await fetchFiles()
   } catch (e) {
     console.error(e)
-    ElMessage.error('Rename failed')
+    message.error('Rename failed')
   }
+}
+
+// Naive UI helper dialogs
+function promptDialog(
+  title: string,
+  label: string,
+  placeholder = ''
+): Promise<string | null> {
+  return new Promise((resolve) => {
+    const inputVal = ref('')
+    let resolved = false
+    dialog.create({
+      title,
+      content: () =>
+        h('div', { style: 'margin-top: 8px;' }, [
+          h('div', { style: 'margin-bottom: 8px;' }, label),
+          h(NInput, {
+            value: inputVal.value,
+            placeholder,
+            'onUpdate:value': (v: string) => (inputVal.value = v),
+            size: 'medium',
+          }),
+        ]),
+      positiveText: 'Confirm',
+      negativeText: 'Cancel',
+      onPositiveClick: () => {
+        resolved = true
+        resolve(inputVal.value.trim() || null)
+      },
+      onNegativeClick: () => {
+        resolved = true
+        resolve(null)
+      },
+      onClose: () => {
+        if (!resolved) resolve(null)
+      },
+    })
+  })
+}
+function confirmDialog(content: string, title = 'Confirm'): Promise<boolean> {
+  return new Promise((resolve) => {
+    let resolved = false
+    dialog.warning({
+      title,
+      content,
+      positiveText: 'Confirm',
+      negativeText: 'Cancel',
+      onPositiveClick: () => {
+        resolved = true
+        resolve(true)
+      },
+      onNegativeClick: () => {
+        resolved = true
+        resolve(false)
+      },
+      onClose: () => {
+        if (!resolved) resolve(false)
+      },
+    })
+  })
 }
 
 onMounted(fetchFiles)
@@ -354,13 +395,7 @@ watch(
 .path {
   padding: 8px 0;
 }
-.file-table :deep(.cell) {
+.file-table :deep(.n-data-table-td) {
   white-space: nowrap;
-}
-.file-link {
-  color: var(--el-color-primary);
-}
-.file-link:hover {
-  text-decoration: underline;
 }
 </style>

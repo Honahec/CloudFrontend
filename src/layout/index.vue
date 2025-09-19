@@ -1,29 +1,32 @@
 <template>
-  <n-layout has-sider class="h-screen">
-    <n-layout-sider
-      class="flex flex-col justify-between gap-3 box-border p-3 pr-2 border-r border-gray-200 h-screen"
-      width="200"
-      bordered
-    >
-      <div class="flex flex-col justify-between min-h-full h-full">
+  <n-layout has-sider class="layout">
+    <n-layout-sider class="sidebar" width="200" bordered>
+      <div class="sidebar-inner">
         <div>
-          <h5 class="mb-2 font-semibold">CloudFrontend</h5>
+          <h5 class="mb-2">CloudFrontend</h5>
           <n-menu
             :value="activeMenu"
             :options="menuOptions"
             @update:value="onMenuSelect"
           />
         </div>
-        <div class="mt-auto pb-2">
+        <div class="get-started">
           <template v-if="isLoggedIn">
             <n-dropdown
               trigger="click"
               placement="top-start"
               :options="userMenuOptions"
-              width="trigger"
+              :min-width="dropdownWidth"
+              :max-width="dropdownWidth"
+              :content-style="{ paddingLeft: '0px', paddingRight: '0px' }"
+              @update:show="
+                (v) => {
+                  if (v) measureDropdownWidth()
+                }
+              "
               @select="onUserMenuSelect"
             >
-              <div class="w-full">
+              <div class="user-trigger" ref="triggerRef">
                 <n-button type="primary" block>
                   {{ displayName || userName || 'Account' }}
                 </n-button>
@@ -31,30 +34,39 @@
             </n-dropdown>
           </template>
           <template v-else>
-            <n-dropdown
-              trigger="click"
-              placement="top-start"
-              :options="authMenuOptions"
-              width="trigger"
-              @select="onAuthMenuSelect"
-            >
-              <div class="w-full">
-                <n-button type="primary" block> Get Started </n-button>
-              </div>
-            </n-dropdown>
+            <div class="user-trigger" ref="triggerRef">
+              <n-dropdown
+                trigger="click"
+                placement="top-start"
+                :options="authMenuOptions"
+                :min-width="dropdownWidth"
+                :max-width="dropdownWidth"
+                :content-style="{ paddingLeft: '0px', paddingRight: '0px' }"
+                @update:show="
+                  (v) => {
+                    if (v) measureDropdownWidth()
+                  }
+                "
+                @select="onAuthMenuSelect"
+              >
+                <div class="user-trigger">
+                  <n-button type="primary" block> Get Started </n-button>
+                </div>
+              </n-dropdown>
+            </div>
           </template>
         </div>
       </div>
     </n-layout-sider>
 
-    <n-layout-content class="p-4 box-border overflow-auto">
+    <n-layout-content class="content">
       <router-view />
     </n-layout-content>
   </n-layout>
 </template>
 
 <script lang="ts" setup>
-import { ref, onMounted, computed } from 'vue'
+import { ref, onMounted, onBeforeUnmount, nextTick, watch, computed } from 'vue'
 import type { MenuOption } from 'naive-ui'
 import { getUserInfo, refreshAccessToken } from '@/api/users/api'
 import { getTokenCookies, setTokenCookies } from '@/utils/userUtils'
@@ -103,6 +115,27 @@ onMounted(async () => {
   }
 })
 
+// measure dropdown width to exactly match trigger (button) width
+const triggerRef = ref<HTMLElement | null>(null)
+const dropdownWidth = ref<number>(0)
+const measureDropdownWidth = () => {
+  if (triggerRef.value) {
+    dropdownWidth.value = triggerRef.value.offsetWidth || 0
+  }
+}
+onMounted(async () => {
+  await nextTick()
+  measureDropdownWidth()
+  window.addEventListener('resize', measureDropdownWidth)
+})
+onBeforeUnmount(() => {
+  window.removeEventListener('resize', measureDropdownWidth)
+})
+watch(isLoggedIn, async () => {
+  await nextTick()
+  measureDropdownWidth()
+})
+
 // user dropdown
 const userMenuOptions: MenuOption[] = [
   { label: 'Settings', key: 'settings' },
@@ -122,3 +155,43 @@ const onAuthMenuSelect = (key: string) => {
   else if (key === 'login') router.push('/login')
 }
 </script>
+
+<style scoped>
+.layout {
+  height: 100vh;
+}
+.sidebar {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  padding: 12px 8px;
+  box-sizing: border-box;
+  border-right: 1px solid #e5e7eb;
+  height: 100vh;
+  justify-content: space-between;
+}
+.sidebar-inner {
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+  min-height: 100%;
+  height: 100%;
+}
+.get-started {
+  margin-top: auto;
+  width: 180px;
+  padding-bottom: 8px;
+}
+.user-trigger {
+  width: 180px;
+}
+.content {
+  padding: 16px;
+  box-sizing: border-box;
+  overflow: auto;
+}
+</style>
+
+<style>
+/* Extra global styles no longer needed for dropdown width; kept empty intentionally */
+</style>

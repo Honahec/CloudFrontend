@@ -1,12 +1,13 @@
 <template>
-  <el-breadcrumb separator="/" class="path">
-    <el-breadcrumb-item>
-      <a @click.prevent="onRootClick" href="#">/</a>
-    </el-breadcrumb-item>
-    <el-breadcrumb-item v-for="(seg, idx) in segments" :key="idx">
-      <a @click.prevent="onSegClick(idx)" href="#">{{ seg || '(empty)' }}</a>
-    </el-breadcrumb-item>
-  </el-breadcrumb>
+  <n-breadcrumb class="path">
+    <n-breadcrumb-item>
+      <a class="link" @click.prevent="onRootClick" href="#">/</a>
+    </n-breadcrumb-item>
+    <n-breadcrumb-item v-for="(seg, idx) in segments" :key="idx">
+      <a class="link" @click.prevent="onSegClick(idx)" href="#">{{ seg || '(empty)' }}</a>
+    </n-breadcrumb-item>
+  </n-breadcrumb>
+  
 </template>
 
 <script lang="ts" setup>
@@ -31,11 +32,10 @@ function onSegClick(idx: number) {
 .path {
   padding: 8px 0;
 }
-a {
-  color: var(--el-color-primary);
+.link {
+  color: #18a058; /* Naive UI primary default */
 }
-a:hover {
+.link:hover {
   text-decoration: underline;
 }
 </style>
-

@@ -1,114 +1,223 @@
 <template>
-  <el-form
-    :model="registerForm"
-    :rules="rules"
-    ref="registerFormRef"
-    label-width="90px"
-    class="register-form"
-    @submit.prevent="onSubmit"
-  >
-    <el-form-item label="用户名" prop="UserName">
-      <el-input v-model="registerForm.username" autocomplete="username" />
-    </el-form-item>
-    <el-form-item label="昵称" prop="Display_Name">
-      <el-input v-model="registerForm.display_name" autocomplete="username" />
-    </el-form-item>
-    <el-form-item label="邮件" prop="UserName">
-      <el-input v-model="registerForm.email" autocomplete="username" />
-    </el-form-item>
-    <el-form-item label="密码" prop="password">
-      <el-input
-        v-model="registerForm.password"
-        type="password"
-        autocomplete="current-password"
-      />
-    </el-form-item>
-    <el-form-item label="重复密码" prop="confirm_password">
-      <el-input
-        v-model="registerForm.confirm_password"
-        type="password"
-        autocomplete="current-password"
-      />
-    </el-form-item>
-    <el-form-item>
-      <el-button type="primary" @click="onSubmit">注册</el-button>
-    </el-form-item>
-  </el-form>
+  <div class="register-wrap">
+    <div class="register-card">
+      <!-- Step 1: 基本信息（用户名、昵称、邮箱） + 继续 -->
+      <div v-if="!showPwd" class="col">
+        <n-input
+          v-model:value="username"
+          round
+          size="large"
+          :status="usernameStatus"
+          :disabled="loading"
+          placeholder="用户名"
+          :input-props="{ autocomplete: 'username' }"
+        />
+        <n-input
+          v-model:value="displayName"
+          round
+          size="large"
+          :status="displayStatus"
+          :disabled="loading"
+          placeholder="昵称"
+        />
+        <n-input
+          v-model:value="email"
+          round
+          size="large"
+          :status="emailStatus"
+          :disabled="loading"
+          placeholder="邮箱"
+          :input-props="{ autocomplete: 'email' }"
+        />
+        <div class="actions">
+          <n-button
+            type="primary"
+            size="large"
+            round
+            block
+            :disabled="!canContinue || loading"
+            @click="onContinue"
+          >
+            继续
+          </n-button>
+        </div>
+      </div>
+
+      <!-- Step 2: 锁定基本信息 + 设置密码 -->
+      <div v-else class="col">
+        <n-input
+          v-model:value="username"
+          round
+          size="large"
+          :status="usernameStatus"
+          disabled
+          placeholder="用户名"
+        />
+        <n-input
+          v-model:value="displayName"
+          round
+          size="large"
+          :status="displayStatus"
+          disabled
+          placeholder="昵称"
+        />
+        <n-input
+          v-model:value="email"
+          round
+          size="large"
+          :status="emailStatus"
+          disabled
+          placeholder="邮箱"
+        />
+
+        <n-input
+          v-model:value="password"
+          type="password"
+          round
+          size="large"
+          show-password-on="mousedown"
+          :status="pwdStatus"
+          placeholder="密码（至少 6 位）"
+          :input-props="{ autocomplete: 'new-password' }"
+          class="mt"
+        />
+        <n-input
+          v-model:value="confirm"
+          type="password"
+          round
+          size="large"
+          show-password-on="mousedown"
+          :status="confirmStatus"
+          placeholder="确认密码"
+          :input-props="{ autocomplete: 'new-password' }"
+          @keyup.enter="onRegister"
+        />
+
+        <div class="actions">
+          <n-button
+            type="primary"
+            size="large"
+            round
+            block
+            :loading="loading"
+            :disabled="!canSubmit"
+            @click="onRegister"
+          >
+            注册
+          </n-button>
+        </div>
+        <div class="sub-actions">
+          <n-button quaternary size="small" :disabled="loading" @click="onBack">
+            返回
+          </n-button>
+        </div>
+      </div>
+    </div>
+  </div>
 </template>
+
 <script lang="ts" setup>
-import { ref } from 'vue'
-import type { FormInstance, FormRules } from 'element-plus'
-import { ElMessage } from 'element-plus'
-import { userRegister, userLogin } from '@/api/users/api'
-import type { userLoginQuery, userRegisterQuery } from '@/api/users/type'
+import { computed, ref, watch } from 'vue'
+import { userRegister } from '@/api/users/api'
+import type { userRegisterQuery } from '@/api/users/type'
 import { setTokenCookies } from '@/utils/userUtils'
 import { useRouter } from 'vue-router'
 
 const router = useRouter()
-const registerForm = ref({
-  username: '',
-  password: '',
-  confirm_password: '',
-  email: '',
-  display_name: '',
+
+// Step state
+const showPwd = ref(false)
+const loading = ref(false)
+
+// Fields
+const username = ref('')
+const displayName = ref('')
+const email = ref('')
+const password = ref('')
+const confirm = ref('')
+
+// Validation
+const usernamePattern = /^[A-Za-z0-9._-]{3,20}$/
+const emailPattern = /^[^\s@]+@[^\s@]+\.[^\s@]+$/
+const usernameValid = computed(() => usernamePattern.test(username.value))
+const displayValid = computed(() => !!displayName.value.trim())
+const emailValid = computed(() => emailPattern.test(email.value))
+const pwdValid = computed(() => password.value.length >= 6)
+const confirmValid = computed(() => confirm.value.length > 0 && confirm.value === password.value)
+
+const usernameStatus = computed(() => (username.value ? (usernameValid.value ? 'success' : 'error') : undefined))
+const displayStatus = computed(() => (displayName.value ? (displayValid.value ? 'success' : 'error') : undefined))
+const emailStatus = computed(() => (email.value ? (emailValid.value ? 'success' : 'error') : undefined))
+const pwdStatus = computed(() => (password.value ? (pwdValid.value ? 'success' : 'error') : undefined))
+const confirmStatus = computed(() => (confirm.value ? (confirmValid.value ? 'success' : 'error') : undefined))
+
+const canContinue = computed(() => usernameValid.value && displayValid.value && emailValid.value)
+const canSubmit = computed(() => showPwd.value && pwdValid.value && confirmValid.value && !loading.value)
+
+watch([username, displayName, email, password, confirm], () => {
+  // 变更任意输入时，未来可重置服务端错误状态
 })
 
-const registerFormRef = ref<FormInstance>()
-const rules: FormRules = {
-  username: [{ required: true, message: '请输入用户名', trigger: 'blur' }],
-  display_name: [{ required: true, message: '请输入昵称', trigger: 'blur' }],
-  email: [
-    { required: true, message: '请输入邮箱', trigger: 'blur' },
-    { type: 'email', message: '邮箱格式不正确', trigger: 'blur' },
-  ],
-  password: [{ required: true, message: '请输入密码', trigger: 'blur' }],
-  confirm_password: [
-    { required: true, message: '请再次输入密码', trigger: 'blur' },
-    {
-      validator: (_r, v, cb) => {
-        if (v !== registerForm.value.password) cb(new Error('两次密码不一致'))
-        else cb()
-      },
-      trigger: 'blur',
-    },
-  ],
+const onContinue = () => {
+  if (!canContinue.value) return
+  showPwd.value = true
 }
 
-const onSubmit = () => {
-  registerFormRef.value?.validate((ok) => {
-    if (!ok) return
-    if (registerForm.value.password !== registerForm.value.confirm_password) {
-      ElMessage.error('两次密码不一致')
-      return
-    }
-    const payload: userRegisterQuery = {
-      username: registerForm.value.username,
-      password: registerForm.value.password,
-      email: registerForm.value.email,
-      display_name: registerForm.value.display_name,
-    }
-    doRegister(payload)
-  })
+const onBack = () => {
+  if (loading.value) return
+  showPwd.value = false
+  password.value = ''
+  confirm.value = ''
 }
 
-const doRegister = async (payload: userRegisterQuery) => {
+const onRegister = async () => {
+  if (!canSubmit.value) return
+  loading.value = true
+  const payload: userRegisterQuery = {
+    username: username.value,
+    password: password.value,
+    email: email.value,
+    display_name: displayName.value,
+  }
   try {
     const res = await userRegister(payload)
     setTokenCookies(res.access, res.refresh)
-    console.log('注册成功', res)
     router.replace('/drive')
-  } catch (err) {
-    console.error('注册失败', err)
+  } catch (e) {
+    // 简单处理：保持在当前步骤，用户自行调整输入
+  } finally {
+    loading.value = false
   }
 }
 </script>
+
 <style scoped>
-.register-form {
-  max-width: 350px;
-  margin: 100px auto;
-  padding: 32px 24px;
-  border: 1px solid #eee;
-  border-radius: 8px;
-  background: #fff;
+.register-wrap {
+  min-height: 70vh;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 24px;
 }
+.register-card {
+  width: 420px;
+  max-width: 92vw;
+  background: #fff;
+  border: 1px solid #eee;
+  border-radius: 14px;
+  padding: 24px;
+  box-shadow: 0 6px 24px rgba(0, 0, 0, 0.06);
+}
+.col {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+.actions {
+  margin-top: 8px;
+}
+.sub-actions {
+  margin-top: 8px;
+}
+.mt { margin-top: 4px; }
 </style>
