@@ -82,11 +82,15 @@
       :start-path="currentPath"
       @confirm="handleMoveConfirm"
     />
+
+    <div v-if="uploadProgressItems.length" class="upload-progress-container">
+      <UploadProgressList :items="uploadProgressItems" />
+    </div>
   </div>
 </template>
 
 <script lang="ts" setup>
-import { computed, h, onMounted, ref, watch } from 'vue'
+import { computed, h, onBeforeUnmount, onMounted, ref, watch } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
 import { useDialog, useMessage, NInput } from 'naive-ui'
 import DriveBreadcrumb from '@/components/drive/DriveBreadcrumb.vue'
@@ -94,6 +98,9 @@ import FilesTable from '@/components/drive/FilesTable.vue'
 import CreateShareModal from '@/components/drop/CreateShareModal.vue'
 import ShareSuccessBanner from '@/components/drop/ShareSuccessBanner.vue'
 import MoveDialog from '@/components/drive/MoveDialog.vue'
+import UploadProgressList, {
+  type UploadProgressItem,
+} from '@/components/upload/UploadProgressList.vue'
 import type { FileRecord } from '@/api/files/type'
 import {
   createFolder,
@@ -120,6 +127,61 @@ const selected = ref<FileRecord[]>([])
 const shareSuccessInfo = ref<ShareInfoPayload | null>(null)
 const shareModalVisible = ref(false)
 const moveDialogVisible = ref(false)
+const uploadProgressItems = ref<UploadProgressItem[]>([])
+
+let clearProgressTimer: number | undefined
+
+function clearProgressSchedule() {
+  if (clearProgressTimer !== undefined) {
+    window.clearTimeout(clearProgressTimer)
+    clearProgressTimer = undefined
+  }
+}
+
+function scheduleProgressClear(delay = 1800) {
+  clearProgressSchedule()
+  clearProgressTimer = window.setTimeout(() => {
+    uploadProgressItems.value = []
+    clearProgressTimer = undefined
+  }, delay)
+}
+
+function initUploadProgress(filesToUpload: File[]) {
+  clearProgressSchedule()
+  const stamp = Date.now()
+  uploadProgressItems.value = filesToUpload.map((file, index) => ({
+    id: `${stamp}-${index}`,
+    name: file.name,
+    percent: 0,
+    status: 'pending',
+  }))
+}
+
+function updateUploadProgress(index: number, percent: number) {
+  const entry = uploadProgressItems.value[index]
+  if (!entry) return
+  entry.percent = Math.min(100, Math.max(0, Math.round(percent)))
+  if (entry.status === 'pending') entry.status = 'uploading'
+  if (entry.percent >= 100) entry.status = 'success'
+}
+
+function markUploadSuccess() {
+  uploadProgressItems.value.forEach((item) => {
+    item.percent = 100
+    item.status = 'success'
+  })
+  scheduleProgressClear()
+}
+
+function markUploadFailure() {
+  clearProgressSchedule()
+  if (uploadProgressItems.value.length === 0) return
+  uploadProgressItems.value.forEach((item) => {
+    if (item.percent < 100) {
+      item.status = 'error'
+    }
+  })
+}
 
 const currentPath = computed(() => {
   const match = route.params.pathMatch
@@ -311,6 +373,8 @@ async function onUpload() {
     try {
       const policy = await getOSSPolicy()
 
+      initUploadProgress(filesToUpload as File[])
+
       const notifyPath = buildNotifyPath(currentPath.value)
 
       await uploadAndNotify(filesToUpload as File[], policy.token, {
@@ -325,12 +389,17 @@ async function onUpload() {
           return prefix ? `${prefix}/${base}${ext}` : `${base}${ext}`
         },
         notifyPath,
+        onProgress: (_file, index, percent) => {
+          updateUploadProgress(index, percent)
+        },
       })
 
+      markUploadSuccess()
       message.success('Uploaded successfully')
       await fetchFiles()
     } catch (error) {
       console.error(error)
+      markUploadFailure()
       message.error('Upload failed')
     }
   }
@@ -434,6 +503,10 @@ onMounted(() => {
   fetchFiles()
 })
 
+onBeforeUnmount(() => {
+  clearProgressSchedule()
+})
+
 watch(
   () => route.fullPath,
   () => {
@@ -457,5 +530,11 @@ watch(
 }
 .file-table :deep(.n-data-table-td) {
   white-space: nowrap;
+}
+.upload-progress-container {
+  position: fixed;
+  right: 24px;
+  bottom: 24px;
+  z-index: 50;
 }
 </style>

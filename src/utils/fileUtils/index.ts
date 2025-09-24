@@ -185,11 +185,18 @@ export async function uploadAndNotify(
     signal?: AbortSignal
     keyResolver?: (file: File, index: number) => string | undefined
     notifyPath?: string
+    onProgress?: (
+      file: File,
+      index: number,
+      percent: number,
+      e: ProgressEvent
+    ) => void
   }
 ): Promise<FileResponse> {
   const uploaded = await uploadFilesToOSS(files, token, {
     signal: opts?.signal,
     keyResolver: opts?.keyResolver,
+    onProgress: opts?.onProgress,
   })
   const body = buildNotifyBody(uploaded, opts?.notifyPath || '/')
   // Use Alova instance to send notify request
