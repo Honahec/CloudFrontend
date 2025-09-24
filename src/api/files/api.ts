@@ -1,11 +1,14 @@
 import { Alova } from '@/utils/alova/index'
 import type {
+  FileCreatePayload,
+  FileCreateResponse,
   FileDeleteResponse,
   FileResponse,
   FolderCreateResponse,
   ReachToken,
   FileUpdateResponse,
   FileDownloadResponse,
+  FileDownloadPayload,
 } from './type'
 import type { NotifyItem } from '@/utils/fileUtils'
 import { getTokenCookies } from '@/utils/userUtils'
@@ -22,6 +25,24 @@ export const getOSSPolicy = () => {
 export const notifyFilesUploaded = (items: NotifyItem[]) => {
   const access = getTokenCookies().access
   return Alova.Post<FileResponse>('/file/uploaded/', items, {
+    headers: access ? { Authorization: `Bearer ${access}` } : undefined,
+  })
+}
+
+const normalizeDrivePath = (path?: string) => {
+  if (!path || path === '/') return '/'
+  let normalized = path.startsWith('/') ? path : '/' + path
+  if (!normalized.endsWith('/')) normalized += '/'
+  return normalized
+}
+
+export const createFile = (payload: FileCreatePayload) => {
+  const access = getTokenCookies().access
+  const body: FileCreatePayload = {
+    ...payload,
+    path: normalizeDrivePath(payload.path),
+  }
+  return Alova.Post<FileCreateResponse>('/file/create/', body, {
     headers: access ? { Authorization: `Bearer ${access}` } : undefined,
   })
 }
@@ -109,12 +130,20 @@ export const updateFile = (
   })
 }
 
-export const downloadFile = (id: number) => {
+export const downloadFile = (id: number, payload?: FileDownloadPayload) => {
   const access = getTokenCookies().access
+  const body: FileDownloadPayload = {}
+  if (typeof payload?.code === 'string') {
+    const trimmed = payload.code.trim()
+    if (trimmed) body.code = trimmed
+  }
+  if (typeof payload?.password === 'string') {
+    const trimmed = payload.password.trim()
+    if (trimmed) body.password = trimmed
+  }
   return Alova.Post<FileDownloadResponse>(
     `/file/${id}/download/`,
-    {},
+    body,
     { headers: access ? { Authorization: `Bearer ${access}` } : undefined }
   )
 }
-

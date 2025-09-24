@@ -28,6 +28,14 @@ export interface FileResponse {
   message: string
 }
 
+export interface FileCreatePayload {
+  name: string
+  content_type: string
+  size: number
+  oss_url: string
+  path: string
+}
+
 export interface FileUploadStatus {
   message: string
 }
@@ -52,9 +60,19 @@ export interface FileUpdateResponse {
   message: string
 }
 
+export interface FileCreateResponse {
+  file: FileRecord
+  message: string
+}
+
 export interface FileDownloadLink {
   download_url: string
   message?: string
 }
 
 export type FileDownloadResponse = FileDownloadLink
+
+export interface FileDownloadPayload {
+  code?: string
+  password?: string
+}

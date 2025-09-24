@@ -123,7 +123,7 @@
 import { computed, h, reactive, ref, watch } from 'vue'
 import { useMessage, NButton, NSpace, type FormInst, type FormRules } from 'naive-ui'
 import type { DataTableColumns } from 'naive-ui'
-import type { FileRecord } from '@/api/files/type'
+import type { FileDownloadPayload, FileRecord } from '@/api/files/type'
 import type { DropDetailResponse, DropRecord } from '@/api/drop/type'
 import { getDrop } from '@/api/drop/api'
 import { downloadFile, notifyFilesUploaded } from '@/api/files/api'
@@ -156,6 +156,7 @@ const files = ref<FileRecord[]>([])
 const loading = ref(false)
 const savingAll = ref(false)
 const errorMessage = ref('')
+const lastAccessPayload = ref<FileDownloadPayload | null>(null)
 const isLoggedIn = computed(() => {
   const { access, refresh } = getTokenCookies()
   return !!(access && refresh)
@@ -188,11 +189,12 @@ const currentTreeNode = computed(() =>
 const currentEntries = computed<ShareEntry[]>(() => {
   const node = currentTreeNode.value
   if (!node?.children) return []
-  return node.children.map((child) => ({
+  const children = node.children as ShareTreeOption[]
+  return children.map((child) => ({
     key: String(child.key),
     type: child.type as ShareEntry['type'],
     name: String(child.label ?? ''),
-    record: child.record,
+    record: child.record as FileRecord | undefined,
   }))
 })
 
@@ -303,6 +305,7 @@ async function loadShare() {
   drop.value = null
   files.value = []
   currentTreeKey.value = '__root__'
+  lastAccessPayload.value = null
 
   try {
     const payload: { code: string; password?: string } = {
@@ -313,6 +316,10 @@ async function loadShare() {
     }
 
     const resp = await getDrop(payload)
+    lastAccessPayload.value = {
+      code: payload.code,
+      ...(payload.password ? { password: payload.password } : {}),
+    }
     handleResponse(resp)
     message.success('Files loaded successfully')
   } catch (error: any) {
@@ -356,19 +363,50 @@ function openFolder(key: string) {
 
 async function downloadShared(file: FileRecord) {
   if (!file) return
+  const { access } = getTokenCookies()
+  const requireLogin = normalizeRequireLogin(drop.value?.require_login)
+  if (requireLogin && !access) {
+    message.error('请先登录后再下载文件')
+    return
+  }
+
   try {
-    let url = file.oss_url
-    const { access } = getTokenCookies()
-    if (access) {
-      const data = await downloadFile(file.id)
-      url = (data as any)?.download_url || url
-    }
-    if (!url) throw new Error('No download url')
-    triggerDownload(url, file.name)
+    const downloadPayload: FileDownloadPayload = {}
+    const codeSource =
+      lastAccessPayload.value?.code ?? drop.value?.code ?? formModel.code
+    const normalizedCode =
+      typeof codeSource === 'string' ? codeSource.trim() : ''
+    if (normalizedCode) downloadPayload.code = normalizedCode
+    const passwordSource =
+      lastAccessPayload.value?.password ?? formModel.password
+    const normalizedPassword =
+      typeof passwordSource === 'string' ? passwordSource.trim() : ''
+    if (normalizedPassword) downloadPayload.password = normalizedPassword
+
+    const { download_url } = await downloadFile(file.id, downloadPayload)
+    if (!download_url) throw new Error('No download url')
+
+    triggerDownload(download_url, file.name)
   } catch (error) {
     console.error(error)
     message.error('Download failed')
   }
+}
+
+function normalizeRequireLogin(
+  flag: DropRecord['require_login'] | string | number | null | undefined
+): boolean {
+  if (flag === null || flag === undefined) return false
+  if (typeof flag === 'boolean') return flag
+  if (typeof flag === 'number') return flag !== 0
+  if (typeof flag === 'string') {
+    const normalized = (flag as string).trim().toLowerCase()
+    if (!normalized) return false
+    if (['false', '0', 'no', 'off'].includes(normalized)) return false
+    if (['true', '1', 'yes', 'on'].includes(normalized)) return true
+    return true
+  }
+  return true
 }
 
 async function saveToMy(file: FileRecord) {
