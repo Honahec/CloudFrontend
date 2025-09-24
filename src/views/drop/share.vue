@@ -3,8 +3,8 @@
     <n-card class="share-card" :bordered="false">
       <template #header>
         <div class="header">
-          <h2>Shared Files</h2>
-          <span class="code">Code: {{ code }}</span>
+          <h2>{{ t('dropPage.title') }}</h2>
+          <span class="code">{{ t('dropPage.code', { code }) }}</span>
         </div>
       </template>
 
@@ -15,11 +15,18 @@
 
         <n-form label-placement="top" @submit.prevent="loadShare">
           <div class="form-grid">
-            <n-form-item label="Access Password (if required)">
-              <n-input v-model:value="password" type="password" placeholder="Enter password" clearable />
+            <n-form-item :label="t('common.labels.passwordIfRequired')">
+              <n-input
+                v-model:value="password"
+                type="password"
+                :placeholder="t('dropPage.password')"
+                clearable
+              />
             </n-form-item>
             <div class="form-actions">
-              <n-button type="primary" :loading="loading" @click="loadShare">Load Files</n-button>
+              <n-button type="primary" :loading="loading" @click="loadShare">
+                {{ t('dropPage.load') }}
+              </n-button>
             </div>
           </div>
         </n-form>
@@ -27,11 +34,14 @@
         <n-spin :show="loading">
           <div v-if="drop">
             <n-alert type="info" :bordered="false" class="meta">
-              <div>Expires: {{ expireDisplay }}</div>
+              <div>{{ t('dropPage.expires', { time: expireDisplay }) }}</div>
               <div>
-                Downloads: {{ drop.download_count }} / {{ drop.max_download_count }}
+                {{ t('dropPage.downloads', {
+                  current: drop.download_count,
+                  max: drop.max_download_count,
+                }) }}
               </div>
-              <div v-if="drop.require_login">Login required to download.</div>
+              <div v-if="drop.require_login">{{ t('dropPage.loginRequired') }}</div>
             </n-alert>
 
             <div v-if="files.length > 0">
@@ -42,12 +52,12 @@
                   :disabled="savingAll"
                   @click="saveEntireShare"
                 >
-                  Save All to My Drive
+                  {{ t('dropPage.saveAll') }}
                 </n-button>
               </div>
 
               <div v-if="shareTree.length > 0" class="share-tree">
-                <div class="section-title">Folder Structure</div>
+                <div class="section-title">{{ t('dropPage.folderStructure') }}</div>
                 <n-tree
                   :key="drop.id || drop.code"
                   :data="shareTreeData"
@@ -60,7 +70,9 @@
                 />
               </div>
 
-              <div class="current-path">Current Path: {{ currentFolderPath }}</div>
+              <div class="current-path">
+                {{ t('dropPage.currentPath', { path: currentFolderPath }) }}
+              </div>
 
               <n-data-table
                 :data="currentEntries"
@@ -71,10 +83,10 @@
               />
             </div>
             <div v-else>
-              <n-empty description="No files available" />
+              <n-empty :description="t('dropPage.empty')" />
             </div>
           </div>
-          <n-empty v-else description="Enter password if needed and click Load Files" />
+          <n-empty v-else :description="t('dropPage.prompt')" />
         </n-spin>
       </n-space>
     </n-card>
@@ -92,9 +104,11 @@ import { getDrop } from '@/api/drop/api'
 import { downloadFile, notifyFilesUploaded } from '@/api/files/api'
 import { getTokenCookies } from '@/utils/userUtils'
 import { buildShareTree, collectTreeKeys, type ShareTreeOption } from '@/utils/shareTree'
+import { useI18n } from '@/composables/locale'
 
 const route = useRoute()
 const message = useMessage()
+const { t } = useI18n()
 
 const code = computed(() => String(route.params.code || ''))
 const password = ref('')
@@ -154,23 +168,26 @@ const isLoggedIn = computed(() => {
 })
 
 const columns = computed<DataTableColumns<ShareEntry>>(() => [
-  { title: 'Name', key: 'name', minWidth: 260 },
+  { title: t('filesTable.columns.name'), key: 'name', minWidth: 260 },
   {
-    title: 'Type',
+    title: t('filesTable.columns.contentType'),
     key: 'type',
-    width: 120,
-    render: (row) => (row.type === 'folder' ? 'Folder' : row.record?.content_type || '-'),
+    width: 140,
+    render: (row) =>
+      row.type === 'folder'
+        ? t('dropPage.typeFolder')
+        : row.record?.content_type || '-',
   },
   {
-    title: 'Size',
+    title: t('filesTable.columns.size'),
     key: 'size',
     width: 140,
     render: (row) => (row.type === 'folder' ? '-' : formatSize(row.record?.size ?? 0)),
   },
   {
-    title: 'Actions',
+    title: t('filesTable.columns.actions'),
     key: 'actions',
-    width: 200,
+    width: 220,
     render: (row) =>
       row.type === 'file'
         ? h(NSpace, { size: 'small' }, {
@@ -179,10 +196,10 @@ const columns = computed<DataTableColumns<ShareEntry>>(() => [
                 NButton,
                 {
                   text: true,
-                  type: 'primary',
+                  type: 'default',
                   onClick: () => row.record && downloadShared(row.record),
                 },
-                { default: () => 'Download' }
+                { default: () => t('common.actions.download') }
               ),
               ...(isLoggedIn.value
                 ? [
@@ -190,10 +207,10 @@ const columns = computed<DataTableColumns<ShareEntry>>(() => [
                       NButton,
                       {
                         text: true,
-                        type: 'success',
+                        type: 'default',
                         onClick: () => row.record && saveToMy(row.record),
                       },
-                      { default: () => 'Save to My Files' }
+                      { default: () => t('dropPage.saveToMy') }
                     ),
                   ]
                 : []),
@@ -216,7 +233,7 @@ const rowProps = (row: ShareEntry) => ({
 
 const expireDisplay = computed(() => {
   if (!drop.value) return '-'
-  if (!drop.value.expire_time) return 'No expiration information'
+  if (!drop.value.expire_time) return t('common.status.noEntries')
   try {
     return new Intl.DateTimeFormat(undefined, {
       year: 'numeric',
@@ -233,7 +250,7 @@ const expireDisplay = computed(() => {
 async function loadShare() {
   const shareCode = code.value.trim()
   if (!shareCode) {
-    errorMessage.value = 'Invalid share code'
+    errorMessage.value = t('common.feedback.invalidCode')
     return
   }
   loading.value = true
@@ -252,10 +269,13 @@ async function loadShare() {
       ...(payload.password ? { password: payload.password } : {}),
     }
     handleResponse(resp)
+    message.success(t('common.feedback.loadSharedSuccess'))
   } catch (error: any) {
     console.error(error)
-    const msg = error?.response?.data?.message || error?.message || 'Failed to load shared files'
+    const msg =
+      error?.response?.data?.message || error?.message || t('common.feedback.loadSharedFailed')
     errorMessage.value = msg
+    message.error(msg)
   } finally {
     loading.value = false
   }
@@ -295,7 +315,7 @@ async function downloadShared(file: FileRecord) {
   const { access } = getTokenCookies()
   const requireLogin = normalizeRequireLogin(drop.value?.require_login)
   if (requireLogin && !access) {
-    message.error('Please log in to download files')
+    message.error(t('common.feedback.requireLoginDownload'))
     return
   }
 
@@ -313,12 +333,12 @@ async function downloadShared(file: FileRecord) {
     if (normalizedPassword) downloadPayload.password = normalizedPassword
 
     const { download_url } = await downloadFile(file.id, downloadPayload)
-    if (!download_url) throw new Error('No download url')
+    if (!download_url) throw new Error(t('common.feedback.downloadFailed'))
 
     triggerDownload(download_url, file.name)
   } catch (error) {
     console.error(error)
-    message.error('Download failed')
+    message.error(t('common.feedback.downloadFailed'))
   }
 }
 
@@ -352,7 +372,7 @@ function triggerDownload(url: string, filename: string) {
 async function saveToMy(file: FileRecord) {
   if (!file) return
   if (!isLoggedIn.value) {
-    message.warning('Please log in to save files')
+    message.warning(t('common.feedback.requireLoginSave'))
     return
   }
 
@@ -366,10 +386,11 @@ async function saveToMy(file: FileRecord) {
     }]
 
     await notifyFilesUploaded(notifyItems)
-    message.success(`${file.name} has been saved to your files`)
+    message.success(t('common.feedback.saved', { name: file.name }))
   } catch (error: any) {
     console.error(error)
-    const msg = error?.response?.data?.message || error?.message || 'Failed to save file'
+    const msg =
+      error?.response?.data?.message || error?.message || t('common.feedback.saveFailed')
     message.error(msg)
   }
 }
@@ -377,13 +398,13 @@ async function saveToMy(file: FileRecord) {
 async function saveEntireShare() {
   if (!drop.value) return
   if (!isLoggedIn.value) {
-    message.warning('Please log in to save files')
+    message.warning(t('common.feedback.requireLoginSave'))
     return
   }
 
   const targets = files.value.filter((item) => item.content_type !== 'folder')
   if (targets.length === 0) {
-    message.warning('No files available to save')
+    message.warning(t('common.feedback.noFilesToSave'))
     return
   }
 
@@ -398,10 +419,11 @@ async function saveEntireShare() {
     }))
 
     await notifyFilesUploaded(notifyItems)
-    message.success('Shared files saved to your drive')
+    message.success(t('common.feedback.savedAll'))
   } catch (error: any) {
     console.error(error)
-    const msg = error?.response?.data?.message || error?.message || 'Failed to save shared files'
+    const msg =
+      error?.response?.data?.message || error?.message || t('common.feedback.saveAllFailed')
     message.error(msg)
   } finally {
     savingAll.value = false
@@ -445,12 +467,14 @@ onMounted(() => {
   justify-content: center;
   align-items: flex-start;
   padding: 40px 16px;
-  background: linear-gradient(135deg, #f0f9ff 0%, #e2f5ec 100%);
+  background: var(--color-page-bg);
   box-sizing: border-box;
 }
 .share-card {
-  width: min(720px, 100%);
-  box-shadow: 0 20px 45px rgba(58, 109, 75, 0.18);
+  width: min(760px, 100%);
+  border-radius: 28px;
+  border: 1px solid var(--color-border);
+  box-shadow: 0 32px 110px rgba(17, 17, 17, 0.08);
 }
 .header {
   display: flex;
@@ -462,7 +486,7 @@ onMounted(() => {
 }
 .code {
   font-size: 14px;
-  color: #16a34a;
+  color: var(--color-subtle-text);
 }
 .form-grid {
   display: grid;
@@ -474,6 +498,7 @@ onMounted(() => {
   display: flex;
   align-items: flex-end;
 }
+
 .meta {
   display: flex;
   flex-direction: column;

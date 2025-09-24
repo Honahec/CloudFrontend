@@ -2,7 +2,7 @@
   <div class="share-page">
     <n-card class="share-card" :bordered="false">
       <template #header>
-        <h2>Access Shared Files</h2>
+        <h2>{{ t('sharePage.title') }}</h2>
       </template>
 
       <n-space vertical size="large">
@@ -15,23 +15,23 @@
           label-placement="top"
           :model="formModel"
           :rules="formRules"
-          @submit.prevent="loadShare"
+          @submit.prevent="handleSubmit"
         >
-          <n-form-item label="Share Code" path="code">
+          <n-form-item :label="t('sharePage.codeLabel')" path="code">
             <n-input
               v-model:value="formModel.code"
-              placeholder="Enter share code"
+              :placeholder="t('common.placeholder.shareCode')"
               clearable
               :maxlength="10"
               show-count
             />
           </n-form-item>
 
-          <n-form-item label="Password (if required)" path="password">
+          <n-form-item :label="t('sharePage.passwordLabel')" path="password">
             <n-input
               v-model:value="formModel.password"
               type="password"
-              placeholder="Enter password if needed"
+              :placeholder="t('common.placeholder.password')"
               clearable
             />
           </n-form-item>
@@ -40,10 +40,12 @@
             <n-button
               type="primary"
               :loading="loading"
-              @click="handleSubmit"
               block
+              round
+              size="large"
+              @click="handleSubmit"
             >
-              Access Files
+              {{ t('sharePage.submit') }}
             </n-button>
           </n-form-item>
         </n-form>
@@ -52,37 +54,44 @@
           <div v-if="drop">
             <n-alert type="info" :bordered="false" class="share-info">
               <div class="info-row">
-                <span class="label">Share Code:</span>
+                <span class="label">{{ t('sharePage.codeLabel') }}</span>
                 <span class="value">{{ drop.code }}</span>
               </div>
               <div class="info-row">
-                <span class="label">Expires:</span>
+                <span class="label">{{ t('common.labels.expires') }}</span>
                 <span class="value">{{ expireDisplay }}</span>
               </div>
               <div class="info-row">
-                <span class="label">Downloads:</span>
-                <span class="value">{{ drop.download_count }} / {{ drop.max_download_count }}</span>
+                <span class="label">{{ t('common.labels.downloads') }}</span>
+                <span class="value">
+                  {{ drop.download_count }} / {{ drop.max_download_count }}
+                </span>
               </div>
-              <div v-if="drop.require_login" class="info-row">
-                <span class="label">Login required:</span>
-                <span class="value">Yes</span>
+              <div class="info-row">
+                <span class="label">{{ t('sharePage.loginRequiredLabel') }}</span>
+                <span class="value">
+                  {{ drop.require_login ? t('sharePage.yes') : t('sharePage.no') }}
+                </span>
               </div>
             </n-alert>
 
             <div v-if="files.length > 0">
               <div class="share-toolbar" v-if="isLoggedIn">
                 <n-button
-                  type="success"
+                  type="primary"
+                  tertiary
+                  round
+                  size="medium"
                   :loading="savingAll"
                   :disabled="savingAll"
                   @click="saveEntireShare"
                 >
-                  转存分享内容
+                  {{ t('sharePage.saveShare') }}
                 </n-button>
               </div>
 
               <div v-if="shareTree.length > 0" class="share-tree">
-                <div class="section-title">目录结构</div>
+                <div class="section-title">{{ t('sharePage.treeTitle') }}</div>
                 <n-tree
                   :key="drop?.id || drop?.code || 'share-tree'"
                   :data="shareTreeData"
@@ -95,7 +104,9 @@
                 />
               </div>
 
-              <div class="current-path">当前目录：{{ currentFolderPath }}</div>
+              <div class="current-path">
+                {{ t('sharePage.currentPath', { path: currentFolderPath }) }}
+              </div>
 
               <n-data-table
                 :data="currentEntries"
@@ -107,11 +118,11 @@
               />
             </div>
             <div v-else>
-              <n-empty description="No files available in this share" />
+              <n-empty :description="t('sharePage.noFiles')" />
             </div>
           </div>
           <div v-else-if="!loading">
-            <n-empty description="Enter share code and password (if needed) to access files" />
+            <n-empty :description="t('sharePage.empty')" />
           </div>
         </n-spin>
       </n-space>
@@ -129,8 +140,10 @@ import { getDrop } from '@/api/drop/api'
 import { downloadFile, notifyFilesUploaded } from '@/api/files/api'
 import { getTokenCookies } from '@/utils/userUtils'
 import { buildShareTree, collectTreeKeys, type ShareTreeOption } from '@/utils/shareTree'
+import { useI18n } from '@/composables/locale'
 
 const message = useMessage()
+const { t } = useI18n()
 const formRef = ref<FormInst | null>(null)
 
 interface FormModel {
@@ -143,13 +156,13 @@ const formModel = reactive<FormModel>({
   password: '',
 })
 
-const formRules: FormRules = {
+const formRules = computed<FormRules>(() => ({
   code: {
     required: true,
-    message: 'Please enter share code',
-    trigger: ['blur', 'input']
-  }
-}
+    message: t('shareModal.feedback.codeRequired'),
+    trigger: ['blur', 'input'],
+  },
+}))
 
 const drop = ref<DropRecord | null>(null)
 const files = ref<FileRecord[]>([])
@@ -209,23 +222,26 @@ const currentFolderPath = computed(() => {
 })
 
 const columns = computed<DataTableColumns<ShareEntry>>(() => [
-  { title: 'Name', key: 'name', minWidth: 260 },
+  { title: t('filesTable.columns.name'), key: 'name', minWidth: 260 },
   {
-    title: 'Type',
+    title: t('filesTable.columns.contentType'),
     key: 'type',
-    width: 120,
-    render: (row) => (row.type === 'folder' ? '文件夹' : row.record?.content_type || '-'),
+    width: 140,
+    render: (row) =>
+      row.type === 'folder'
+        ? t('sharePage.typeFolder')
+        : row.record?.content_type || '-',
   },
   {
-    title: 'Size',
+    title: t('filesTable.columns.size'),
     key: 'size',
     width: 140,
     render: (row) => (row.type === 'folder' ? '-' : formatSize(row.record?.size ?? 0)),
   },
   {
-    title: 'Actions',
+    title: t('filesTable.columns.actions'),
     key: 'actions',
-    width: 200,
+    width: 220,
     render: (row) =>
       row.type === 'file'
         ? h(NSpace, { size: 'small' }, {
@@ -234,10 +250,10 @@ const columns = computed<DataTableColumns<ShareEntry>>(() => [
                 NButton,
                 {
                   text: true,
-                  type: 'primary',
+                  type: 'default',
                   onClick: () => row.record && downloadShared(row.record),
                 },
-                { default: () => '下载' }
+                { default: () => t('common.actions.download') }
               ),
               ...(isLoggedIn.value
                 ? [
@@ -245,10 +261,10 @@ const columns = computed<DataTableColumns<ShareEntry>>(() => [
                       NButton,
                       {
                         text: true,
-                        type: 'success',
+                        type: 'default',
                         onClick: () => row.record && saveToMy(row.record),
                       },
-                      { default: () => '转存' }
+                      { default: () => t('sharePage.saveSingle') }
                     ),
                   ]
                 : []),
@@ -271,7 +287,7 @@ const rowProps = (row: ShareEntry) => ({
 
 const expireDisplay = computed(() => {
   if (!drop.value) return '-'
-  if (!drop.value.expire_time) return 'No expiration'
+  if (!drop.value.expire_time) return t('common.status.noEntries')
   try {
     return new Intl.DateTimeFormat(undefined, {
       year: 'numeric',
@@ -296,7 +312,7 @@ async function handleSubmit() {
 
 async function loadShare() {
   if (!formModel.code.trim()) {
-    message.warning('Please enter share code')
+    message.warning(t('shareModal.feedback.codeRequired'))
     return
   }
 
@@ -321,10 +337,11 @@ async function loadShare() {
       ...(payload.password ? { password: payload.password } : {}),
     }
     handleResponse(resp)
-    message.success('Files loaded successfully')
+    message.success(t('common.feedback.loadSharedSuccess'))
   } catch (error: any) {
     console.error(error)
-    const msg = error?.response?.data?.message || error?.message || 'Failed to load shared files'
+    const fallback = t('common.feedback.loadSharedFailed')
+    const msg = error?.response?.data?.message || error?.message || fallback
     errorMessage.value = msg
     message.error(msg)
   } finally {
@@ -366,7 +383,7 @@ async function downloadShared(file: FileRecord) {
   const { access } = getTokenCookies()
   const requireLogin = normalizeRequireLogin(drop.value?.require_login)
   if (requireLogin && !access) {
-    message.error('请先登录后再下载文件')
+    message.error(t('common.feedback.requireLoginDownload'))
     return
   }
 
@@ -384,12 +401,12 @@ async function downloadShared(file: FileRecord) {
     if (normalizedPassword) downloadPayload.password = normalizedPassword
 
     const { download_url } = await downloadFile(file.id, downloadPayload)
-    if (!download_url) throw new Error('No download url')
+    if (!download_url) throw new Error(t('common.feedback.downloadFailed'))
 
     triggerDownload(download_url, file.name)
   } catch (error) {
     console.error(error)
-    message.error('Download failed')
+    message.error(t('common.feedback.downloadFailed'))
   }
 }
 
@@ -412,7 +429,7 @@ function normalizeRequireLogin(
 async function saveToMy(file: FileRecord) {
   if (!file) return
   if (!isLoggedIn.value) {
-    message.warning('Please log in to save files')
+    message.warning(t('common.feedback.requireLoginSave'))
     return
   }
 
@@ -427,10 +444,11 @@ async function saveToMy(file: FileRecord) {
     }]
 
     await notifyFilesUploaded(notifyItems)
-    message.success(`${file.name} has been saved to your files`)
+    message.success(t('common.feedback.saved', { name: file.name }))
   } catch (error: any) {
     console.error(error)
-    const msg = error?.response?.data?.message || error?.message || 'Failed to save file'
+    const msg =
+      error?.response?.data?.message || error?.message || t('common.feedback.saveFailed')
     message.error(msg)
   }
 }
@@ -438,13 +456,13 @@ async function saveToMy(file: FileRecord) {
 async function saveEntireShare() {
   if (!drop.value) return
   if (!isLoggedIn.value) {
-    message.warning('请先登录后再转存分享内容')
+    message.warning(t('common.feedback.requireLoginSave'))
     return
   }
 
   const targets = files.value.filter((item) => item.content_type !== 'folder')
   if (targets.length === 0) {
-    message.warning('暂无可转存的文件')
+    message.warning(t('common.feedback.noFilesToSave'))
     return
   }
 
@@ -459,10 +477,11 @@ async function saveEntireShare() {
     }))
 
     await notifyFilesUploaded(notifyItems)
-    message.success('分享内容已转存到你的云盘')
+    message.success(t('common.feedback.savedAll'))
   } catch (error: any) {
     console.error(error)
-    const msg = error?.response?.data?.message || error?.message || '转存分享内容失败'
+    const msg =
+      error?.response?.data?.message || error?.message || t('common.feedback.saveAllFailed')
     message.error(msg)
   } finally {
     savingAll.value = false
@@ -509,12 +528,14 @@ function formatSize(size: number) {
 <style scoped>
 .share-page {
   padding: 24px;
-  max-width: 1000px;
+  max-width: 1040px;
   margin: 0 auto;
 }
 
 .share-card {
-  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+  border-radius: 24px;
+  border: 1px solid var(--color-border);
+  box-shadow: 0 24px 80px rgba(17, 17, 17, 0.08);
 }
 
 .share-info {
@@ -543,6 +564,7 @@ function formatSize(size: number) {
 .section-title {
   font-weight: 600;
   margin-bottom: 8px;
+  color: var(--color-text);
 }
 
 .info-row {
@@ -553,12 +575,12 @@ function formatSize(size: number) {
 
 .label {
   font-weight: 500;
-  color: #666;
+  color: var(--color-subtle-text);
 }
 
 .value {
   font-weight: 600;
-  color: #333;
+  color: var(--color-text);
 }
 
 .files-table {

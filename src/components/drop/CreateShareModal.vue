@@ -1,11 +1,13 @@
 <template>
   <n-modal :show="show" preset="card" class="share-modal" @close="handleCancel">
-    <template #header>Create Share</template>
+    <template #header>{{ t('shareModal.title') }}</template>
 
     <div class="section">
-      <div class="section-title">Selected Items</div>
+      <div class="section-title">{{ t('shareModal.selectedItems') }}</div>
       <n-spin :show="previewLoading" size="small">
-        <div v-if="selectedItems.length === 0" class="hint">No items selected.</div>
+        <div v-if="selectedItems.length === 0" class="hint">
+          {{ t('shareModal.noSelection') }}
+        </div>
         <n-tree
           v-else-if="selectedTree.length > 0"
           :data="selectedTree"
@@ -14,47 +16,56 @@
           :show-line="true"
           :default-expanded-keys="selectedTreeKeys"
         />
-        <div v-else class="hint">No files found in the selected items.</div>
+        <div v-else class="hint">{{ t('shareModal.noFiles') }}</div>
       </n-spin>
       <n-alert v-if="hasFolderSelected" type="info" class="mt-2" :bordered="false">
-        Folders will include all nested files and subfolders in the share.
+        {{ t('shareModal.includeHint') }}
       </n-alert>
     </div>
 
     <n-form label-placement="top" class="section" :model="formModel">
-      <n-form-item label="Share Code" path="code">
+      <n-form-item :label="t('shareModal.form.code')" path="code">
         <n-input v-model:value="formModel.code" maxlength="10" show-count />
       </n-form-item>
       <div class="form-grid">
-        <n-form-item label="Expires In" path="expire_days">
+        <n-form-item :label="t('shareModal.form.expires')" path="expire_days">
           <n-select v-model:value="formModel.expire_days" :options="expireOptions" />
         </n-form-item>
-        <n-form-item label="Max Downloads" path="max_download_count">
+        <n-form-item :label="t('shareModal.form.downloads')" path="max_download_count">
           <n-input-number v-model:value="formModel.max_download_count" :min="1" />
         </n-form-item>
       </div>
       <div class="form-grid">
-        <n-form-item label="Require Login" path="require_login">
+        <n-form-item :label="t('shareModal.form.requireLogin')" path="require_login">
           <n-switch v-model:value="formModel.require_login" />
         </n-form-item>
-        <n-form-item label="Access Password (optional)" path="password">
+        <n-form-item :label="t('shareModal.form.password')" path="password">
           <n-input v-model:value="formModel.password" type="password" clearable />
         </n-form-item>
       </div>
     </n-form>
 
     <n-alert v-if="shareResult" type="success" class="section" :bordered="false">
-      <div class="result-row"><span>Share Code:</span><strong>{{ shareResult.drop.code }}</strong></div>
-      <div class="result-row"><span>Link:</span><a :href="shareLink" target="_blank" rel="noopener">{{ shareLink }}</a></div>
-      <div v-if="formModel.password" class="result-row"><span>Password:</span><strong>{{ formModel.password }}</strong></div>
+      <div class="result-row">
+        <span>{{ t('shareModal.result.code') }}:</span>
+        <strong>{{ shareResult.drop.code }}</strong>
+      </div>
+      <div class="result-row">
+        <span>{{ t('shareModal.result.link') }}:</span>
+        <a :href="shareLink" target="_blank" rel="noopener">{{ shareLink }}</a>
+      </div>
+      <div v-if="formModel.password" class="result-row">
+        <span>{{ t('shareModal.result.password') }}:</span>
+        <strong>{{ formModel.password }}</strong>
+      </div>
       <div class="result-row" v-if="shareResult.drop.expire_time">
-        <span>Expires:</span>{{ formatDate(shareResult.drop.expire_time) }}
+        <span>{{ t('shareModal.result.expires') }}:</span>{{ formatDate(shareResult.drop.expire_time) }}
       </div>
     </n-alert>
 
     <template #action>
       <n-space>
-        <n-button @click="handleCancel">Close</n-button>
+        <n-button @click="handleCancel">{{ t('common.actions.close') }}</n-button>
         <n-button
           v-if="!shareResult"
           type="primary"
@@ -62,7 +73,7 @@
           :loading="loading"
           @click="handleSubmit"
         >
-          Create Share
+          {{ t('common.actions.createShare') }}
         </n-button>
       </n-space>
     </template>
@@ -78,6 +89,7 @@ import { createDrop } from '@/api/drop/api'
 import type { DropCreateResponse } from '@/api/drop/type'
 import { storeShareInfo } from '@/utils/shareStorage'
 import { buildShareTree, collectTreeKeys, type ShareTreeOption } from '@/utils/shareTree'
+import { useI18n } from '@/composables/locale'
 
 const props = defineProps<{
   show: boolean
@@ -90,6 +102,7 @@ const emit = defineEmits<{
 }>()
 
 const message = useMessage()
+const { t } = useI18n()
 
 interface FormModel {
   code: string
@@ -107,12 +120,12 @@ const formModel = reactive<FormModel>({
   password: '',
 })
 
-const expireOptions = [
-  { label: '1 day', value: 1 },
-  { label: '3 days', value: 3 },
-  { label: '7 days', value: 7 },
-  { label: '15 days', value: 15 },
-]
+const expireOptions = computed(() => [
+  { label: t('shareModal.expireOptions.one'), value: 1 },
+  { label: t('shareModal.expireOptions.three'), value: 3 },
+  { label: t('shareModal.expireOptions.seven'), value: 7 },
+  { label: t('shareModal.expireOptions.fifteen'), value: 15 },
+])
 
 const loading = ref(false)
 const shareResult = ref<DropCreateResponse | null>(null)
@@ -151,11 +164,11 @@ function resetForm() {
 
 async function handleSubmit() {
   if (selectedItems.value.length === 0) {
-    message.warning('Select at least one item to share')
+    message.warning(t('common.feedback.selectOne'))
     return
   }
   if (!formModel.code.trim()) {
-    message.warning('Share code is required')
+    message.warning(t('shareModal.feedback.codeRequired'))
     return
   }
   loading.value = true
@@ -169,7 +182,7 @@ async function handleSubmit() {
     }
 
     if (filesToShare.length === 0) {
-      message.warning('Select at least one item to share')
+      message.warning(t('common.feedback.selectOne'))
       return
     }
 
@@ -196,7 +209,7 @@ async function handleSubmit() {
       expireTime: resp?.drop?.expire_time ?? null,
     })
 
-    message.success('Share created successfully')
+    message.success(t('common.feedback.shareCreateSuccess'))
     emit('update:show', false)
 
     if (typeof window !== 'undefined') {
@@ -204,7 +217,7 @@ async function handleSubmit() {
     }
   } catch (error: any) {
     console.error(error)
-    message.error(error?.message || 'Failed to create share')
+    message.error(error?.message || t('common.feedback.shareCreateFailed'))
   } finally {
     loading.value = false
   }
@@ -268,7 +281,9 @@ async function expandSelectionRecords(records: FileRecord[]): Promise<{
         const resp = await listFilesByPath(folderPath)
         children = Array.isArray(resp?.files) ? resp.files : []
       } catch (error) {
-        throw new Error(`Failed to load folder "${current.name}" contents`)
+        throw new Error(
+          t('shareModal.feedback.loadFolderFailed', { name: current.name })
+        )
       }
       folderCache.set(folderPath, children)
     }
@@ -323,7 +338,7 @@ async function refreshSelectionPreview() {
   } catch (error: any) {
     if (requestId !== previewRequestId) return
     console.error(error)
-    message.error(error?.message || 'Failed to load folder contents')
+    message.error(error?.message || t('shareModal.feedback.loadFailed'))
   } finally {
     if (requestId === previewRequestId) {
       previewLoading.value = false

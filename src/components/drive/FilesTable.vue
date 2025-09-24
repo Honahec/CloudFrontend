@@ -1,6 +1,12 @@
 <template>
-  <n-empty v-if="loading && files.length === 0" description="Loading..." />
-  <n-empty v-else-if="!loading && files.length === 0" description="No files" />
+  <n-empty
+    v-if="loading && files.length === 0"
+    :description="t('filesTable.emptyLoading')"
+  />
+  <n-empty
+    v-else-if="!loading && files.length === 0"
+    :description="t('filesTable.empty')"
+  />
 
   <n-data-table
     v-else
@@ -18,6 +24,7 @@
 import { h, ref, computed } from 'vue'
 import type { DataTableColumns, DataTableRowKey } from 'naive-ui'
 import { NButton } from 'naive-ui'
+import { useI18n } from '@/composables/locale'
 import type { FileRecord } from '@/api/files/type'
 
 const props = defineProps<{
@@ -42,10 +49,12 @@ function formatSize(size: number) {
   return `${(size / 1024 / 1024 / 1024).toFixed(1)} GB`
 }
 
+const { t } = useI18n()
+
 const columns = computed<DataTableColumns<FileRecord>>(() => [
   { type: 'selection', multiple: true, width: 48 },
   {
-    title: 'File Name',
+    title: t('filesTable.columns.name'),
     key: 'name',
     minWidth: 280,
     render: (row) =>
@@ -53,22 +62,23 @@ const columns = computed<DataTableColumns<FileRecord>>(() => [
         NButton,
         {
           text: true,
-          type: 'primary',
+          type: 'default',
+          quaternary: true,
           onClick: () => emit('open', row),
         },
         { default: () => row.name }
       ),
   },
-  { title: 'Content Type', key: 'content_type', width: 200 },
+  { title: t('filesTable.columns.contentType'), key: 'content_type', width: 200 },
   {
-    title: 'Size',
+    title: t('filesTable.columns.size'),
     key: 'size',
     width: 140,
     render: (row) => formatSize(row.size as any),
   },
-  { title: 'Created', key: 'created_at', width: 220 },
+  { title: t('filesTable.columns.created'), key: 'created_at', width: 220 },
   {
-    title: 'Actions',
+    title: t('filesTable.columns.actions'),
     key: 'actions',
     minWidth: 200,
     render: (row) => [
@@ -76,16 +86,16 @@ const columns = computed<DataTableColumns<FileRecord>>(() => [
         NButton,
         {
           text: true,
-          type: 'primary',
+          type: 'default',
           onClick: () => emit('download', row),
           style: { marginRight: '8px' },
         },
-        { default: () => 'Download' }
+        { default: () => t('common.actions.download') }
       ),
       h(
         NButton,
         { text: true, type: 'error', onClick: () => emit('delete', row) },
-        { default: () => 'Delete' }
+        { default: () => t('common.actions.delete') }
       ),
     ],
   },

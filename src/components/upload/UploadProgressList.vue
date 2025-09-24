@@ -26,6 +26,9 @@
 </template>
 
 <script lang="ts" setup>
+import { computed } from 'vue'
+import { useI18n } from '@/composables/locale'
+
 export type UploadProgressStatus = 'pending' | 'uploading' | 'success' | 'error'
 
 export interface UploadProgressItem {
@@ -39,12 +42,14 @@ const props = defineProps<{
   items: UploadProgressItem[]
 }>()
 
-const statusLabelMap: Record<UploadProgressStatus, string> = {
-  pending: 'Pending',
-  uploading: 'Uploading',
-  success: 'Complete',
-  error: 'Failed',
-}
+const { t } = useI18n()
+
+const statusLabelMap = computed<Record<UploadProgressStatus, string>>(() => ({
+  pending: t('upload.status.pending'),
+  uploading: t('upload.status.uploading'),
+  success: t('upload.status.success'),
+  error: t('upload.status.error'),
+}))
 
 function progressStatus(status: UploadProgressStatus) {
   if (status === 'success') return 'success'

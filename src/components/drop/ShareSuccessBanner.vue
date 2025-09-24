@@ -7,35 +7,38 @@
     :closable="true"
     @close="emitClose"
   >
-    <div class="banner-title">分享创建成功</div>
+    <div class="banner-title">{{ t('shareBanner.title') }}</div>
     <div class="row">
-      <span class="label">分享码</span>
+      <span class="label">{{ t('shareBanner.code') }}</span>
       <span class="value">{{ displayCode }}</span>
-      <n-button size="tiny" quaternary @click="copyText(info.code)"
-        >复制</n-button
+      <n-button size="tiny" quaternary @click="copyText(info.code)">
+        {{ t('common.actions.copy') }}
+      </n-button>
       >
     </div>
     <div v-if="info.link" class="row">
-      <span class="label">链接</span>
+      <span class="label">{{ t('shareBanner.link') }}</span>
       <n-input size="small" readonly :value="info.link" class="link-input" />
-      <n-button size="tiny" quaternary @click="copyText(info.link)"
-        >复制链接</n-button
+      <n-button size="tiny" quaternary @click="copyText(info.link)">
+        {{ t('common.actions.copyLink') }}
+      </n-button>
       >
     </div>
     <div v-if="info.password" class="row">
-      <span class="label">访问密码</span>
+      <span class="label">{{ t('shareBanner.password') }}</span>
       <n-input
         size="small"
         readonly
         :value="info.password"
         class="link-input"
       />
-      <n-button size="tiny" quaternary @click="copyText(String(info.password))"
-        >复制密码</n-button
+      <n-button size="tiny" quaternary @click="copyText(String(info.password))">
+        {{ t('common.actions.copyPassword') }}
+      </n-button>
       >
     </div>
     <div v-if="expireLabel" class="row info">
-      <span class="label">过期时间</span>
+      <span class="label">{{ t('shareBanner.expireTime') }}</span>
       <span class="value">{{ expireLabel }}</span>
     </div>
   </n-alert>
@@ -45,6 +48,7 @@
 import { computed } from 'vue'
 import { useMessage } from 'naive-ui'
 import type { ShareInfoPayload } from '@/utils/shareStorage'
+import { useI18n } from '@/composables/locale'
 
 const props = defineProps<{
   info: ShareInfoPayload
@@ -53,6 +57,7 @@ const props = defineProps<{
 const emit = defineEmits<{ (e: 'close'): void }>()
 
 const message = useMessage()
+const { t } = useI18n()
 
 const displayCode = computed(() => props.info.code?.trim() || '-')
 
@@ -81,10 +86,10 @@ async function copyText(text: string) {
   if (!text) return
   try {
     await navigator.clipboard.writeText(text)
-    message.success('已复制到剪贴板')
+    message.success(t('common.feedback.copySuccess'))
   } catch (error) {
     console.error(error)
-    message.error('复制失败')
+    message.error(t('common.feedback.copyError'))
   }
 }
 </script>

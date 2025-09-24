@@ -9,7 +9,7 @@
           size="large"
           :status="usernameStatus"
           :disabled="loading"
-          placeholder="请输入用户名"
+          :placeholder="t('auth.login.usernamePlaceholder')"
           :input-props="{ autocomplete: 'username' }"
           class="username-input"
         />
@@ -21,7 +21,7 @@
           @click="onContinue"
           class="continue-btn"
         >
-          继续
+          {{ t('auth.login.continue') }}
         </n-button>
       </div>
 
@@ -33,7 +33,7 @@
           size="large"
           :status="serverAuthFailed ? 'error' : usernameStatus"
           disabled
-          placeholder="用户名"
+          :placeholder="t('auth.login.usernamePlaceholder')"
           :input-props="{ autocomplete: 'username' }"
           class="username-input only"
         />
@@ -47,12 +47,12 @@
             type="password"
             round
             size="large"
-            show-password-on="mousedown"
-            :status="serverAuthFailed ? 'error' : undefined"
-            placeholder="请输入密码"
-            :input-props="{ autocomplete: 'current-password' }"
-            @keyup.enter="onLogin"
-          />
+          show-password-on="mousedown"
+          :status="serverAuthFailed ? 'error' : undefined"
+          :placeholder="t('auth.login.passwordPlaceholder')"
+          :input-props="{ autocomplete: 'current-password' }"
+          @keyup.enter="onLogin"
+        />
         </div>
       </transition>
 
@@ -68,14 +68,14 @@
           :disabled="!canSubmit"
           @click="onLogin"
         >
-          登录
+          {{ t('auth.login.submit') }}
         </n-button>
       </div>
 
       <!-- 返回按钮（左下角，quaternary 小按钮） -->
       <div class="sub-actions" v-if="showPassword">
         <n-button quaternary size="small" :disabled="loading" @click="onBack">
-          返回
+          {{ t('auth.login.back') }}
         </n-button>
       </div>
     </div>
@@ -88,8 +88,10 @@ import { userLogin } from '@/api/users/api'
 import type { userLoginQuery } from '@/api/users/type'
 import { setTokenCookies } from '@/utils/userUtils'
 import { useRouter } from 'vue-router'
+import { useI18n } from '@/composables/locale'
 
 const router = useRouter()
+const { t } = useI18n()
 
 // state
 const username = ref('')
@@ -152,16 +154,16 @@ const onBack = () => {
   display: flex;
   align-items: center;
   justify-content: center;
-  padding: 24px;
+  padding: 32px;
 }
 .login-card {
   width: 420px;
   max-width: 92vw;
-  background: #fff;
-  border: 1px solid #eee;
-  border-radius: 14px;
-  padding: 24px;
-  box-shadow: 0 6px 24px rgba(0, 0, 0, 0.06);
+  background: var(--color-card-bg);
+  border: 1px solid var(--color-border);
+  border-radius: 18px;
+  padding: 28px;
+  box-shadow: 0 28px 80px rgba(17, 17, 17, 0.08);
 }
 .row {
   display: flex;

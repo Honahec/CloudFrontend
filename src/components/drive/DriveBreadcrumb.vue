@@ -5,7 +5,7 @@
     </n-breadcrumb-item>
     <n-breadcrumb-item v-for="(seg, idx) in visibleSegments" :key="`${idx}-${seg}`">
       <a class="link" href="#" @click.prevent="onSegClick(idx)">
-        {{ seg || '(unnamed)' }}
+        {{ seg || unnamedLabel }}
       </a>
     </n-breadcrumb-item>
   </n-breadcrumb>
@@ -13,24 +13,23 @@
 
 <script lang="ts" setup>
 import { computed } from 'vue'
+import { useI18n } from '@/composables/locale'
 
-const props = withDefaults(
-  defineProps<{
-    segments: string[]
-    rootLabel?: string
-  }>(),
-  {
-    rootLabel: 'Drive',
-  }
-)
+const props = defineProps<{
+  segments: string[]
+  rootLabel?: string
+}>()
 
 const emit = defineEmits<{
   (e: 'navigate-root'): void
   (e: 'navigate-to', index: number): void
 }>()
 
+const { t } = useI18n()
+
 const visibleSegments = computed(() => props.segments.filter((seg) => seg !== ''))
-const rootLabel = computed(() => props.rootLabel || 'Drive')
+const rootLabel = computed(() => props.rootLabel || t('drive.breadcrumb.root'))
+const unnamedLabel = computed(() => t('drive.breadcrumb.unnamed'))
 
 function onRootClick() {
   emit('navigate-root')
@@ -46,7 +45,8 @@ function onSegClick(idx: number) {
   padding: 8px 0;
 }
 .link {
-  color: #18a058;
+  color: var(--color-text);
+  font-weight: 500;
 }
 .link:hover {
   text-decoration: underline;

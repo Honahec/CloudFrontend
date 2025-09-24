@@ -1,57 +1,70 @@
 <template>
   <div class="drive">
     <div class="toolbar">
-      <n-space wrap>
-        <n-button tertiary type="primary" @click="onNewFolder">New Folder</n-button>
-        <n-button tertiary type="success" @click="onUpload">Upload</n-button>
-        <n-button
-          tertiary
-          type="primary"
-          @click="onDownload"
-          :disabled="selectedNonFolderCount === 0"
-        >
-          Download
+      <div class="action-row primary">
+        <n-button type="primary" round size="medium" @click="onNewFolder">
+          {{ t('drive.toolbar.newFolder') }}
+        </n-button>
+        <n-button type="primary" tertiary round size="medium" @click="onUpload">
+          {{ t('drive.toolbar.upload') }}
         </n-button>
         <n-button
-          tertiary
           type="primary"
+          tertiary
+          round
+          size="medium"
           @click="onShare"
           :disabled="selectedShareableCount === 0"
         >
-          Share
+          {{ t('drive.toolbar.share') }}
+        </n-button>
+      </div>
+      <div class="action-row secondary">
+        <n-button
+          quaternary
+          round
+          size="medium"
+          @click="onDownload"
+          :disabled="selectedNonFolderCount === 0"
+        >
+          {{ t('drive.toolbar.download') }}
         </n-button>
         <n-button
-          tertiary
-          type="primary"
+          quaternary
+          round
+          size="medium"
           @click="openMoveDialog"
           :disabled="selected.length === 0"
         >
-          Move
+          {{ t('drive.toolbar.move') }}
         </n-button>
         <n-button
-          tertiary
-          type="primary"
+          quaternary
+          round
+          size="medium"
           @click="onRename"
           :disabled="selected.length !== 1"
         >
-          Rename
+          {{ t('drive.toolbar.rename') }}
         </n-button>
         <n-button
-          tertiary
           type="error"
+          quaternary
+          round
+          size="medium"
           @click="onDelete"
           :disabled="selected.length === 0"
         >
-          Delete
+          {{ t('drive.toolbar.delete') }}
         </n-button>
-      </n-space>
+      </div>
     </div>
 
     <n-divider class="divider" />
 
     <DriveBreadcrumb
       :segments="breadcrumbSegments"
-      root-label="Drive"
+      :root-label="t('drive.breadcrumb.root')"
       @navigate-root="goRoot"
       @navigate-to="goTo"
     />
@@ -115,11 +128,13 @@ import {
 import { uploadAndNotify } from '@/utils/fileUtils'
 import { takeShareInfo, type ShareInfoPayload } from '@/utils/shareStorage'
 import { md5 } from '@/utils/crypto/md5'
+import { useI18n } from '@/composables/locale'
 
 const router = useRouter()
 const route = useRoute()
 const message = useMessage()
 const dialog = useDialog()
+const { t } = useI18n()
 
 const files = ref<FileRecord[]>([])
 const loading = ref(false)
@@ -253,24 +268,27 @@ async function downloadRow(row: FileRecord) {
   try {
     const data = await downloadFile(row.id)
     const url = (data as any)?.download_url || row.oss_url
-    if (!url) throw new Error('No download url')
+    if (!url) throw new Error(t('common.feedback.downloadFailed'))
     triggerDownload(url, row.name)
   } catch (error) {
     console.error(error)
-    message.error('Download failed')
+    message.error(t('common.feedback.downloadFailed'))
   }
 }
 
 async function deleteRow(row: FileRecord) {
-  const ok = await confirmDialog(`Delete "${row.name}"?`, 'Delete')
+  const ok = await confirmDialog(
+    t('drive.dialogs.deleteSingle', { name: row.name }),
+    t('drive.toolbar.delete')
+  )
   if (!ok) return
   try {
     await deleteFile(row.id)
-    message.success('Deleted successfully')
+    message.success(t('common.feedback.deleteSuccess'))
     await fetchFiles()
   } catch (error) {
     console.error(error)
-    message.error('Delete failed')
+    message.error(t('common.feedback.deleteFailed'))
   }
 }
 
@@ -294,7 +312,7 @@ async function onDownload() {
     })
   } catch (error) {
     console.error(error)
-    message.error('Download failed')
+    message.error(t('common.feedback.downloadFailed'))
   }
 }
 
@@ -311,7 +329,7 @@ function triggerDownload(url: string, filename: string) {
 
 function onShare() {
   if (selectedShareableCount.value === 0) {
-    message.warning('Select at least one item to share')
+    message.warning(t('common.feedback.selectOne'))
     return
   }
   shareModalVisible.value = true
@@ -336,29 +354,32 @@ async function handleMoveConfirm(dest: string) {
   try {
     const fileIds = selected.value.map((file) => file.id)
     await moveFiles(fileIds, normalized)
-    message.success('Moved successfully')
+    message.success(t('common.feedback.moveSuccess'))
     moveDialogVisible.value = false
     selected.value = []
     await fetchFiles()
   } catch (error) {
     console.error(error)
-    message.error('Move failed')
+    message.error(t('common.feedback.moveFailed'))
   }
 }
 
 async function onDelete() {
   if (selected.value.length === 0) return
-  const ok = await confirmDialog(`Delete ${selected.value.length} item(s)?`, 'Delete')
+  const ok = await confirmDialog(
+    t('drive.dialogs.deleteMultiple', { count: selected.value.length }),
+    t('drive.toolbar.delete')
+  )
   if (!ok) return
   try {
     const fileIds = selected.value.map((file) => file.id)
     await deleteFiles(fileIds)
-    message.success('Deleted successfully')
+    message.success(t('common.feedback.deleteSuccess'))
     selected.value = []
     await fetchFiles()
   } catch (error) {
     console.error(error)
-    message.error('Delete failed')
+    message.error(t('common.feedback.deleteFailed'))
   }
 }
 
@@ -395,19 +416,23 @@ async function onUpload() {
       })
 
       markUploadSuccess()
-      message.success('Uploaded successfully')
+      message.success(t('common.feedback.uploadSuccess'))
       await fetchFiles()
     } catch (error) {
       console.error(error)
       markUploadFailure()
-      message.error('Upload failed')
+      message.error(t('common.feedback.uploadFailed'))
     }
   }
   input.click()
 }
 
 async function onNewFolder() {
-  const value = await promptDialog('New Folder', 'Folder name', 'New folder')
+  const value = await promptDialog(
+    t('drive.dialogs.newFolderTitle'),
+    t('drive.dialogs.newFolderLabel'),
+    t('drive.dialogs.newFolderPlaceholder')
+  )
   if (!value) return
   try {
     let path = currentPath.value
@@ -415,27 +440,31 @@ async function onNewFolder() {
     else if (!path.startsWith('/')) path = '/' + path
     if (!path.endsWith('/')) path = path + '/'
     await createFolder(path, String(value))
-    message.success('Folder created')
+    message.success(t('common.feedback.folderCreated'))
     await fetchFiles()
   } catch (error) {
     console.error(error)
-    message.error('Create folder failed')
+    message.error(t('common.feedback.folderCreateFailed'))
   }
 }
 
 async function onRename() {
   if (selected.value.length !== 1) return
   const target = selected.value[0]
-  const value = await promptDialog('Rename', 'New name', target.name)
+  const value = await promptDialog(
+    t('drive.dialogs.renameTitle'),
+    t('drive.dialogs.renameLabel'),
+    target.name
+  )
   if (!value) return
   try {
     await updateFile(target.id, { name: String(value) })
-    message.success('Renamed successfully')
+    message.success(t('common.feedback.renameSuccess'))
     selected.value = []
     await fetchFiles()
   } catch (error) {
     console.error(error)
-    message.error('Rename failed')
+    message.error(t('common.feedback.renameFailed'))
   }
 }
 
@@ -455,8 +484,8 @@ function promptDialog(title: string, label: string, placeholder = ''): Promise<s
             size: 'medium',
           }),
         ]),
-      positiveText: 'Confirm',
-      negativeText: 'Cancel',
+      positiveText: t('common.actions.confirm'),
+      negativeText: t('common.actions.cancel'),
       onPositiveClick: () => {
         resolved = true
         resolve(inputVal.value.trim() || null)
@@ -472,14 +501,17 @@ function promptDialog(title: string, label: string, placeholder = ''): Promise<s
   })
 }
 
-function confirmDialog(content: string, title = 'Confirm'): Promise<boolean> {
+function confirmDialog(
+  content: string,
+  title = t('common.actions.confirm')
+): Promise<boolean> {
   return new Promise((resolve) => {
     let resolved = false
     dialog.warning({
       title,
       content,
-      positiveText: 'Confirm',
-      negativeText: 'Cancel',
+      positiveText: t('common.actions.confirm'),
+      negativeText: t('common.actions.cancel'),
       onPositiveClick: () => {
         resolved = true
         resolve(true)
@@ -519,15 +551,38 @@ watch(
 .drive {
   display: flex;
   flex-direction: column;
-  gap: 12px;
+  gap: 20px;
 }
+
 .toolbar {
   display: flex;
-  justify-content: flex-end;
+  flex-direction: column;
+  gap: 12px;
+  padding: 16px 20px;
+  border: 1px solid var(--color-border);
+  border-radius: 18px;
+  background: var(--color-card-bg);
+  box-shadow: 0 12px 40px rgba(17, 17, 17, 0.06);
 }
+
+.action-row {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 12px;
+}
+
+.action-row.primary {
+  justify-content: flex-start;
+}
+
+.action-row.secondary {
+  justify-content: flex-start;
+}
+
 .divider {
   margin: 0;
 }
+
 .file-table :deep(.n-data-table-td) {
   white-space: nowrap;
 }

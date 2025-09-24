@@ -9,7 +9,7 @@
           size="large"
           :status="usernameStatus"
           :disabled="loading"
-          placeholder="用户名"
+          :placeholder="t('auth.register.usernamePlaceholder')"
           :input-props="{ autocomplete: 'username' }"
         />
         <n-input
@@ -18,7 +18,7 @@
           size="large"
           :status="displayStatus"
           :disabled="loading"
-          placeholder="昵称"
+          :placeholder="t('auth.register.displayPlaceholder')"
         />
         <n-input
           v-model:value="email"
@@ -26,7 +26,7 @@
           size="large"
           :status="emailStatus"
           :disabled="loading"
-          placeholder="邮箱"
+          :placeholder="t('auth.register.emailPlaceholder')"
           :input-props="{ autocomplete: 'email' }"
         />
         <div class="actions">
@@ -38,7 +38,7 @@
             :disabled="!canContinue || loading"
             @click="onContinue"
           >
-            继续
+            {{ t('auth.register.continue') }}
           </n-button>
         </div>
       </div>
@@ -51,7 +51,7 @@
           size="large"
           :status="usernameStatus"
           disabled
-          placeholder="用户名"
+          :placeholder="t('auth.register.usernamePlaceholder')"
         />
         <n-input
           v-model:value="displayName"
@@ -59,7 +59,7 @@
           size="large"
           :status="displayStatus"
           disabled
-          placeholder="昵称"
+          :placeholder="t('auth.register.displayPlaceholder')"
         />
         <n-input
           v-model:value="email"
@@ -67,7 +67,7 @@
           size="large"
           :status="emailStatus"
           disabled
-          placeholder="邮箱"
+          :placeholder="t('auth.register.emailPlaceholder')"
         />
 
         <n-input
@@ -77,7 +77,7 @@
           size="large"
           show-password-on="mousedown"
           :status="pwdStatus"
-          placeholder="密码（至少 6 位）"
+          :placeholder="t('auth.register.passwordPlaceholder')"
           :input-props="{ autocomplete: 'new-password' }"
           class="mt"
         />
@@ -88,7 +88,7 @@
           size="large"
           show-password-on="mousedown"
           :status="confirmStatus"
-          placeholder="确认密码"
+          :placeholder="t('auth.register.confirmPlaceholder')"
           :input-props="{ autocomplete: 'new-password' }"
           @keyup.enter="onRegister"
         />
@@ -103,12 +103,12 @@
             :disabled="!canSubmit"
             @click="onRegister"
           >
-            注册
+            {{ t('auth.register.submit') }}
           </n-button>
         </div>
         <div class="sub-actions">
           <n-button quaternary size="small" :disabled="loading" @click="onBack">
-            返回
+            {{ t('auth.register.back') }}
           </n-button>
         </div>
       </div>
@@ -122,8 +122,10 @@ import { userRegister } from '@/api/users/api'
 import type { userRegisterQuery } from '@/api/users/type'
 import { setTokenCookies } from '@/utils/userUtils'
 import { useRouter } from 'vue-router'
+import { useI18n } from '@/composables/locale'
 
 const router = useRouter()
+const { t } = useI18n()
 
 // Step state
 const showPwd = ref(false)
@@ -197,16 +199,16 @@ const onRegister = async () => {
   display: flex;
   align-items: center;
   justify-content: center;
-  padding: 24px;
+  padding: 32px;
 }
 .register-card {
-  width: 420px;
+  width: 460px;
   max-width: 92vw;
-  background: #fff;
-  border: 1px solid #eee;
-  border-radius: 14px;
-  padding: 24px;
-  box-shadow: 0 6px 24px rgba(0, 0, 0, 0.06);
+  background: var(--color-card-bg);
+  border: 1px solid var(--color-border);
+  border-radius: 20px;
+  padding: 28px;
+  box-shadow: 0 28px 90px rgba(17, 17, 17, 0.08);
 }
 .col {
   display: flex;

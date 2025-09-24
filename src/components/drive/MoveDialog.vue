@@ -1,11 +1,11 @@
 <template>
   <n-modal :show="show" preset="card" class="move-modal" @close="handleCancel">
-    <template #header>Move To</template>
+    <template #header>{{ t('moveDialog.title') }}</template>
 
     <div class="section">
       <DriveBreadcrumb
         :segments="breadcrumbSegments"
-        root-label="Drive"
+        :root-label="t('moveDialog.root')"
         @navigate-root="goRoot"
         @navigate-to="goTo"
       />
@@ -13,7 +13,7 @@
 
     <n-spin :show="loading">
       <div v-if="!loading && folders.length === 0" class="empty-wrapper">
-        <n-empty description="No subfolders" />
+        <n-empty :description="t('moveDialog.empty')" />
       </div>
       <n-list v-else bordered hoverable>
         <n-list-item
@@ -29,7 +29,9 @@
             <span>{{ folder.name }}</span>
           </div>
           <template #suffix>
-            <n-button text type="primary" @click.stop="enterFolder(folder)">Open</n-button>
+            <n-button text type="primary" @click.stop="enterFolder(folder)">
+              {{ t('moveDialog.open') }}
+            </n-button>
           </template>
         </n-list-item>
       </n-list>
@@ -37,8 +39,10 @@
 
     <template #action>
       <n-space>
-        <n-button @click="handleCancel">Cancel</n-button>
-        <n-button type="primary" :loading="loading" @click="handleConfirm">Move here</n-button>
+        <n-button @click="handleCancel">{{ t('moveDialog.cancel') }}</n-button>
+        <n-button type="primary" :loading="loading" @click="handleConfirm">
+          {{ t('moveDialog.confirm') }}
+        </n-button>
       </n-space>
     </template>
   </n-modal>
@@ -51,6 +55,7 @@ import DriveBreadcrumb from './DriveBreadcrumb.vue'
 import type { FileRecord } from '@/api/files/type'
 import { listFilesByPath } from '@/api/files/api'
 import { Folder as FolderIcon } from '@element-plus/icons-vue'
+import { useI18n } from '@/composables/locale'
 
 const props = defineProps<{
   show: boolean
@@ -63,6 +68,7 @@ const emit = defineEmits<{
 }>()
 
 const message = useMessage()
+const { t } = useI18n()
 const internalPath = ref('')
 const folders = ref<FileRecord[]>([])
 const loading = ref(false)
@@ -90,11 +96,13 @@ async function fetchFolders() {
     const apiPath = apiListPath(internalPath.value)
     const resp = await listFilesByPath(apiPath)
     const items = Array.isArray((resp as any)?.files) ? (resp as any).files : []
-    folders.value = items.filter((item: FileRecord) => item.content_type === 'folder')
+    folders.value = items.filter(
+      (item: FileRecord) => item.content_type === 'folder'
+    )
   } catch (error) {
     console.error(error)
     folders.value = []
-    message.error('Failed to load folders')
+    message.error(t('moveDialog.failed'))
   } finally {
     loading.value = false
   }
