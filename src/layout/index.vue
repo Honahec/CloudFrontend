@@ -1,6 +1,6 @@
 <template>
   <n-layout has-sider class="layout">
-    <n-layout-sider class="sidebar" width="250" bordered>
+    <n-layout-sider class="sidebar" width="`${12}%`" bordered>
       <div class="sidebar-inner">
         <div class="sidebar-top">
           <div class="brand">

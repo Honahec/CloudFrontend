@@ -93,6 +93,8 @@
     <MoveDialog
       v-model:show="moveDialogVisible"
       :start-path="currentPath"
+      :min-width="'60vw'"
+      :max-width="'60vw'"
       @confirm="handleMoveConfirm"
     />
 
@@ -258,7 +260,9 @@ function goTo(idx: number) {
 
 function openRow(row: FileRecord) {
   if ((row as any).is_dir || row.content_type === 'folder') {
-    const next = currentPath.value ? `${currentPath.value}/${row.name}` : row.name
+    const next = currentPath.value
+      ? `${currentPath.value}/${row.name}`
+      : row.name
     router.push({ name: 'DrivePath', params: { pathMatch: next } })
   }
 }
@@ -297,7 +301,9 @@ function onSelectionChange(rows: FileRecord[]) {
 }
 
 async function onDownload() {
-  const targets = selected.value.filter((item) => item.content_type !== 'folder')
+  const targets = selected.value.filter(
+    (item) => item.content_type !== 'folder'
+  )
   if (targets.length === 0) return
   try {
     const results = await Promise.all(
@@ -468,7 +474,11 @@ async function onRename() {
   }
 }
 
-function promptDialog(title: string, label: string, placeholder = ''): Promise<string | null> {
+function promptDialog(
+  title: string,
+  label: string,
+  placeholder = ''
+): Promise<string | null> {
   return new Promise((resolve) => {
     const inputVal = ref('')
     let resolved = false

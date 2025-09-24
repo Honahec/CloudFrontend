@@ -140,6 +140,7 @@ import { getDrop } from '@/api/drop/api'
 import { downloadFile, notifyFilesUploaded } from '@/api/files/api'
 import { getTokenCookies } from '@/utils/userUtils'
 import { buildShareTree, collectTreeKeys, type ShareTreeOption } from '@/utils/shareTree'
+import { mapShareAccessError } from '@/utils/shareErrors'
 import { useI18n } from '@/composables/locale'
 
 const message = useMessage()
@@ -340,8 +341,7 @@ async function loadShare() {
     message.success(t('common.feedback.loadSharedSuccess'))
   } catch (error: any) {
     console.error(error)
-    const fallback = t('common.feedback.loadSharedFailed')
-    const msg = error?.response?.data?.message || error?.message || fallback
+    const msg = mapShareAccessError(error, t)
     errorMessage.value = msg
     message.error(msg)
   } finally {
@@ -528,7 +528,7 @@ function formatSize(size: number) {
 <style scoped>
 .share-page {
   padding: 24px;
-  max-width: 1040px;
+  width: min(60%, 1040px);
   margin: 0 auto;
 }
 
@@ -585,5 +585,11 @@ function formatSize(size: number) {
 
 .files-table {
   margin-top: 16px;
+}
+
+@media (max-width: 960px) {
+  .share-page {
+    width: 100%;
+  }
 }
 </style>

@@ -230,6 +230,12 @@ const zh = {
     typeFolder: '文件夹',
     typeFile: '文件',
     saveSingle: '保存到我的文件',
+    errors: {
+      unauthorized: '请登录后再访问该分享',
+      invalidPassword: '密码错误',
+      notFound: '分享码不存在',
+      limitExceeded: '下载次数已用尽',
+    },
   },
   dropPage: {
     title: '分享文件',
@@ -285,12 +291,19 @@ const zh = {
     },
   },
   auth: {
+    common: {
+      title: '登录 / 注册',
+      toLogin: '去登录',
+      toRegister: '去注册',
+    },
     login: {
       usernamePlaceholder: '请输入用户名',
       passwordPlaceholder: '请输入密码',
       continue: '继续',
       submit: '登录',
       back: '返回',
+      switchLabel: '还没有账号？',
+      switchAction: '立即注册',
     },
     register: {
       usernamePlaceholder: '用户名',
@@ -301,6 +314,8 @@ const zh = {
       continue: '继续',
       submit: '注册',
       back: '返回',
+      switchLabel: '已有账号？',
+      switchAction: '去登录',
     },
   },
   upload: {

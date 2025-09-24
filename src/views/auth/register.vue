@@ -1,6 +1,18 @@
 <template>
   <div class="register-wrap">
     <div class="register-card">
+      <div class="auth-header">
+        <div class="auth-switch">
+          <n-button text size="small" type="primary" :disabled="loading" @click="goLogin">
+            {{ t('auth.common.toLogin') }}
+          </n-button>
+          <n-button text size="small" type="primary" disabled>
+            {{ t('auth.common.toRegister') }}
+          </n-button>
+        </div>
+        <h2 class="auth-title">{{ t('auth.common.title') }}</h2>
+      </div>
+
       <!-- Step 1: 基本信息（用户名、昵称、邮箱） + 继续 -->
       <div v-if="!showPwd" class="col">
         <n-input
@@ -11,6 +23,7 @@
           :disabled="loading"
           :placeholder="t('auth.register.usernamePlaceholder')"
           :input-props="{ autocomplete: 'username' }"
+          @keyup.enter="onContinue"
         />
         <n-input
           v-model:value="displayName"
@@ -19,6 +32,7 @@
           :status="displayStatus"
           :disabled="loading"
           :placeholder="t('auth.register.displayPlaceholder')"
+          @keyup.enter="onContinue"
         />
         <n-input
           v-model:value="email"
@@ -28,6 +42,7 @@
           :disabled="loading"
           :placeholder="t('auth.register.emailPlaceholder')"
           :input-props="{ autocomplete: 'email' }"
+          @keyup.enter="onContinue"
         />
         <div class="actions">
           <n-button
@@ -191,6 +206,11 @@ const onRegister = async () => {
     loading.value = false
   }
 }
+
+const goLogin = () => {
+  if (loading.value) return
+  router.push('/login')
+}
 </script>
 
 <style scoped>
@@ -209,6 +229,22 @@ const onRegister = async () => {
   border-radius: 20px;
   padding: 28px;
   box-shadow: 0 28px 90px rgba(17, 17, 17, 0.08);
+}
+.auth-header {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  margin-bottom: 20px;
+}
+.auth-switch {
+  display: flex;
+  gap: 8px;
+}
+.auth-title {
+  margin: 0;
+  font-size: 20px;
+  font-weight: 600;
+  color: var(--color-text);
 }
 .col {
   display: flex;

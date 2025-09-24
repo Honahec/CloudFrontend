@@ -1,5 +1,11 @@
 <template>
-  <n-modal :show="show" preset="card" class="share-modal" @close="handleCancel">
+  <n-modal
+    :show="show"
+    preset="card"
+    class="share-modal"
+    :style="modalStyle"
+    @close="handleCancel"
+  >
     <template #header>{{ t('shareModal.title') }}</template>
 
     <div class="section">
@@ -18,7 +24,12 @@
         />
         <div v-else class="hint">{{ t('shareModal.noFiles') }}</div>
       </n-spin>
-      <n-alert v-if="hasFolderSelected" type="info" class="mt-2" :bordered="false">
+      <n-alert
+        v-if="hasFolderSelected"
+        type="info"
+        class="mt-2"
+        :bordered="false"
+      >
         {{ t('shareModal.includeHint') }}
       </n-alert>
     </div>
@@ -29,23 +40,44 @@
       </n-form-item>
       <div class="form-grid">
         <n-form-item :label="t('shareModal.form.expires')" path="expire_days">
-          <n-select v-model:value="formModel.expire_days" :options="expireOptions" />
+          <n-select
+            v-model:value="formModel.expire_days"
+            :options="expireOptions"
+          />
         </n-form-item>
-        <n-form-item :label="t('shareModal.form.downloads')" path="max_download_count">
-          <n-input-number v-model:value="formModel.max_download_count" :min="1" />
+        <n-form-item
+          :label="t('shareModal.form.downloads')"
+          path="max_download_count"
+        >
+          <n-input-number
+            v-model:value="formModel.max_download_count"
+            :min="1"
+          />
         </n-form-item>
       </div>
       <div class="form-grid">
-        <n-form-item :label="t('shareModal.form.requireLogin')" path="require_login">
+        <n-form-item
+          :label="t('shareModal.form.requireLogin')"
+          path="require_login"
+        >
           <n-switch v-model:value="formModel.require_login" />
         </n-form-item>
         <n-form-item :label="t('shareModal.form.password')" path="password">
-          <n-input v-model:value="formModel.password" type="password" clearable />
+          <n-input
+            v-model:value="formModel.password"
+            type="password"
+            clearable
+          />
         </n-form-item>
       </div>
     </n-form>
 
-    <n-alert v-if="shareResult" type="success" class="section" :bordered="false">
+    <n-alert
+      v-if="shareResult"
+      type="success"
+      class="section"
+      :bordered="false"
+    >
       <div class="result-row">
         <span>{{ t('shareModal.result.code') }}:</span>
         <strong>{{ shareResult.drop.code }}</strong>
@@ -59,13 +91,16 @@
         <strong>{{ formModel.password }}</strong>
       </div>
       <div class="result-row" v-if="shareResult.drop.expire_time">
-        <span>{{ t('shareModal.result.expires') }}:</span>{{ formatDate(shareResult.drop.expire_time) }}
+        <span>{{ t('shareModal.result.expires') }}:</span
+        >{{ formatDate(shareResult.drop.expire_time) }}
       </div>
     </n-alert>
 
     <template #action>
       <n-space>
-        <n-button @click="handleCancel">{{ t('common.actions.close') }}</n-button>
+        <n-button @click="handleCancel">{{
+          t('common.actions.close')
+        }}</n-button>
         <n-button
           v-if="!shareResult"
           type="primary"
@@ -88,13 +123,24 @@ import type { FileRecord } from '@/api/files/type'
 import { createDrop } from '@/api/drop/api'
 import type { DropCreateResponse } from '@/api/drop/type'
 import { storeShareInfo } from '@/utils/shareStorage'
-import { buildShareTree, collectTreeKeys, type ShareTreeOption } from '@/utils/shareTree'
+import {
+  buildShareTree,
+  collectTreeKeys,
+  type ShareTreeOption,
+} from '@/utils/shareTree'
 import { useI18n } from '@/composables/locale'
 
 const props = defineProps<{
   show: boolean
   files: FileRecord[]
+  minWidth?: string
+  maxWidth?: string
 }>()
+
+const modalStyle = computed(() => ({
+  width: props.minWidth ?? '60vw',
+  maxWidth: props.maxWidth ?? '60vw',
+}))
 
 const emit = defineEmits<{
   (e: 'update:show', value: boolean): void
@@ -116,7 +162,7 @@ const formModel = reactive<FormModel>({
   code: generateCode(),
   expire_days: 7,
   require_login: false,
-  max_download_count: 1,
+  max_download_count: 10,
   password: '',
 })
 
@@ -150,14 +196,17 @@ const shareLink = computed(() => {
 })
 
 function generateCode(): string {
-  return Math.random().toString(36).replace(/[^a-z0-9]+/gi, '').slice(0, 6)
+  return Math.random()
+    .toString(36)
+    .replace(/[^a-z0-9]+/gi, '')
+    .slice(0, 6)
 }
 
 function resetForm() {
   formModel.code = generateCode()
   formModel.expire_days = 7
   formModel.require_login = false
-  formModel.max_download_count = 1
+  formModel.max_download_count = 10
   formModel.password = ''
   shareResult.value = null
 }
@@ -200,8 +249,11 @@ async function handleSubmit() {
     emit('created', resp)
 
     const shareCode = (resp?.drop?.code || payload.code || '').trim()
-    const shareLinkValue = resp?.share_url || (shareCode ? buildShareLink(shareCode) : '')
-    const sharePassword = formModel.password ? formModel.password.trim() : undefined
+    const shareLinkValue =
+      resp?.share_url || (shareCode ? buildShareLink(shareCode) : '')
+    const sharePassword = formModel.password
+      ? formModel.password.trim()
+      : undefined
     storeShareInfo({
       code: shareCode,
       link: shareLinkValue,
@@ -373,9 +425,6 @@ watch(
 </script>
 
 <style scoped>
-.share-modal {
-  width: 520px;
-}
 .section {
   margin-bottom: 16px;
 }

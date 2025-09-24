@@ -104,6 +104,7 @@ import { getDrop } from '@/api/drop/api'
 import { downloadFile, notifyFilesUploaded } from '@/api/files/api'
 import { getTokenCookies } from '@/utils/userUtils'
 import { buildShareTree, collectTreeKeys, type ShareTreeOption } from '@/utils/shareTree'
+import { mapShareAccessError } from '@/utils/shareErrors'
 import { useI18n } from '@/composables/locale'
 
 const route = useRoute()
@@ -272,8 +273,7 @@ async function loadShare() {
     message.success(t('common.feedback.loadSharedSuccess'))
   } catch (error: any) {
     console.error(error)
-    const msg =
-      error?.response?.data?.message || error?.message || t('common.feedback.loadSharedFailed')
+    const msg = mapShareAccessError(error, t)
     errorMessage.value = msg
     message.error(msg)
   } finally {
@@ -471,7 +471,7 @@ onMounted(() => {
   box-sizing: border-box;
 }
 .share-card {
-  width: min(760px, 100%);
+  width: min(60%, 760px);
   border-radius: 28px;
   border: 1px solid var(--color-border);
   box-shadow: 0 32px 110px rgba(17, 17, 17, 0.08);
@@ -527,5 +527,11 @@ onMounted(() => {
 .current-path {
   margin-bottom: 12px;
   font-weight: 500;
+}
+
+@media (max-width: 960px) {
+  .share-card {
+    width: 100%;
+  }
 }
 </style>

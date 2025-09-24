@@ -1,5 +1,11 @@
 <template>
-  <n-modal :show="show" preset="card" class="move-modal" @close="handleCancel">
+  <n-modal
+    :show="show"
+    preset="card"
+    class="move-modal"
+    :style="modalStyle"
+    @close="handleCancel"
+  >
     <template #header>{{ t('moveDialog.title') }}</template>
 
     <div class="section">
@@ -57,11 +63,6 @@ import { listFilesByPath } from '@/api/files/api'
 import { Folder as FolderIcon } from '@element-plus/icons-vue'
 import { useI18n } from '@/composables/locale'
 
-const props = defineProps<{
-  show: boolean
-  startPath: string
-}>()
-
 const emit = defineEmits<{
   (e: 'update:show', value: boolean): void
   (e: 'confirm', path: string): void
@@ -73,11 +74,23 @@ const internalPath = ref('')
 const folders = ref<FileRecord[]>([])
 const loading = ref(false)
 
+const props = defineProps<{
+  show: boolean
+  startPath?: string
+  minWidth?: string
+  maxWidth?: string
+}>()
+
+const modalStyle = computed(() => ({
+  width: props.minWidth ?? '60vw',
+  maxWidth: props.maxWidth ?? '60vw',
+}))
+
 const breadcrumbSegments = computed(() =>
   internalPath.value ? internalPath.value.split('/').filter(Boolean) : []
 )
 
-function normalizeState(path: string): string {
+function normalizeState(path?: string): string {
   if (!path) return ''
   const trimmed = path.replace(/^\/+/, '').replace(/\/+$/, '')
   return trimmed
@@ -161,9 +174,6 @@ onMounted(() => {
 </script>
 
 <style scoped>
-.move-modal {
-  width: 520px;
-}
 .section {
   margin-bottom: 12px;
 }

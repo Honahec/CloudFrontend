@@ -4,12 +4,22 @@
       <h1>{{ t('home.title') }}</h1>
       <p>{{ t('home.description') }}</p>
       <div class="hero-actions">
-        <n-button type="primary" size="large" round @click="goDrive">
-          {{ t('home.primary') }}
-        </n-button>
-        <n-button tertiary size="large" round @click="goShare">
-          {{ t('home.secondary') }}
-        </n-button>
+        <template v-if="isLoggedIn">
+          <n-button type="primary" size="large" round @click="goDrive">
+            {{ t('home.primary') }}
+          </n-button>
+          <n-button tertiary size="large" round @click="goShare">
+            {{ t('home.secondary') }}
+          </n-button>
+        </template>
+        <template v-else>
+          <n-button type="primary" size="large" round @click="goLogin">
+            {{ t('common.actions.login') }}
+          </n-button>
+          <n-button tertiary size="large" round @click="goRegister">
+            {{ t('common.actions.register') }}
+          </n-button>
+        </template>
       </div>
     </div>
 
@@ -23,12 +33,15 @@
 </template>
 
 <script lang="ts" setup>
-import { computed } from 'vue'
+import { computed, onMounted, ref } from 'vue'
 import { useRouter } from 'vue-router'
 import { useI18n } from '@/composables/locale'
+import { getTokenCookies } from '@/utils/userUtils'
 
 const router = useRouter()
 const { t } = useI18n()
+
+const isLoggedIn = ref(false)
 
 const highlights = computed(() => [
   { key: 'secure', text: t('home.highlights.secure') },
@@ -36,12 +49,25 @@ const highlights = computed(() => [
   { key: 'shareable', text: t('home.highlights.shareable') },
 ])
 
+onMounted(() => {
+  const { access, refresh } = getTokenCookies()
+  isLoggedIn.value = Boolean(access && refresh)
+})
+
 const goDrive = () => {
   router.push('/drive')
 }
 
 const goShare = () => {
   router.push('/share')
+}
+
+const goLogin = () => {
+  router.push('/login')
+}
+
+const goRegister = () => {
+  router.push('/register')
 }
 </script>
 

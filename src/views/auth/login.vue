@@ -1,6 +1,18 @@
 <template>
   <div class="login-wrap">
     <div class="login-card">
+      <div class="auth-header">
+        <div class="auth-switch">
+          <n-button text size="small" type="primary" disabled>
+            {{ t('auth.common.toLogin') }}
+          </n-button>
+          <n-button text size="small" type="primary" :disabled="loading" @click="goRegister">
+            {{ t('auth.common.toRegister') }}
+          </n-button>
+        </div>
+        <h2 class="auth-title">{{ t('auth.common.title') }}</h2>
+      </div>
+
       <!-- Step 1: 用户名 + 继续按钮（水平排列） -->
       <div class="row" v-if="!showPassword">
         <n-input
@@ -12,6 +24,7 @@
           :placeholder="t('auth.login.usernamePlaceholder')"
           :input-props="{ autocomplete: 'username' }"
           class="username-input"
+          @keyup.enter="onContinue"
         />
         <n-button
           round
@@ -78,6 +91,7 @@
           {{ t('auth.login.back') }}
         </n-button>
       </div>
+
     </div>
   </div>
 </template>
@@ -146,6 +160,11 @@ const onBack = () => {
   password.value = ''
   serverAuthFailed.value = false
 }
+
+const goRegister = () => {
+  if (loading.value) return
+  router.push('/register')
+}
 </script>
 
 <style scoped>
@@ -164,6 +183,22 @@ const onBack = () => {
   border-radius: 18px;
   padding: 28px;
   box-shadow: 0 28px 80px rgba(17, 17, 17, 0.08);
+}
+.auth-header {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  margin-bottom: 20px;
+}
+.auth-switch {
+  display: flex;
+  gap: 8px;
+}
+.auth-title {
+  margin: 0;
+  font-size: 20px;
+  font-weight: 600;
+  color: var(--color-text);
 }
 .row {
   display: flex;

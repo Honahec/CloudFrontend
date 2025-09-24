@@ -230,6 +230,12 @@ const en = {
     typeFolder: 'Folder',
     typeFile: 'File',
     saveSingle: 'Save to My Files',
+    errors: {
+      unauthorized: 'Please sign in to view this share',
+      invalidPassword: 'Incorrect password',
+      notFound: 'Share code does not exist',
+      limitExceeded: 'Download limit reached',
+    },
   },
   dropPage: {
     title: 'Shared Files',
@@ -285,12 +291,19 @@ const en = {
     },
   },
   auth: {
+    common: {
+      title: 'Login / Register',
+      toLogin: 'Go to login',
+      toRegister: 'Go to register',
+    },
     login: {
       usernamePlaceholder: 'Enter username',
       passwordPlaceholder: 'Enter password',
       continue: 'Continue',
       submit: 'Login',
       back: 'Back',
+      switchLabel: "Don't have an account?",
+      switchAction: 'Register now',
     },
     register: {
       usernamePlaceholder: 'Username',
@@ -301,6 +314,8 @@ const en = {
       continue: 'Continue',
       submit: 'Register',
       back: 'Back',
+      switchLabel: 'Already have an account?',
+      switchAction: 'Sign in',
     },
   },
   upload: {
