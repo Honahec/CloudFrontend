@@ -20,7 +20,7 @@
               :max-width="dropdownWidth"
               :content-style="{ paddingLeft: '0px', paddingRight: '0px' }"
               @update:show="
-                (v) => {
+                (v: boolean) => {
                   if (v) measureDropdownWidth()
                 }
               "
@@ -43,7 +43,7 @@
                 :max-width="dropdownWidth"
                 :content-style="{ paddingLeft: '0px', paddingRight: '0px' }"
                 @update:show="
-                  (v) => {
+                  (v: boolean) => {
                     if (v) measureDropdownWidth()
                   }
                 "
@@ -73,7 +73,10 @@ import { getTokenCookies, setTokenCookies } from '@/utils/userUtils'
 import { useRouter } from 'vue-router'
 
 // menu
-const menuOptions: MenuOption[] = [{ label: 'Drive', key: '/drive' }]
+const menuOptions: MenuOption[] = [
+  { label: 'Drive', key: '/drive' },
+  { label: 'Share', key: '/share' }
+]
 const router = useRouter()
 const onMenuSelect = (key: string) => {
   if (key && key !== router.currentRoute.value.path) router.push(key)
@@ -83,6 +86,7 @@ const onMenuSelect = (key: string) => {
 const activeMenu = computed(() => {
   const path = router.currentRoute.value.path
   if (path.startsWith('/drive')) return '/drive'
+  if (path.startsWith('/share')) return '/share'
   return path
 })
 

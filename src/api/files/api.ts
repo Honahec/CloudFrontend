@@ -29,7 +29,7 @@ export const notifyFilesUploaded = (items: NotifyItem[]) => {
 // List files by logical drive path, e.g. path = '' or 'path/to/folder'
 export const listFilesByPath = (path: string) => {
   const access = getTokenCookies().access
-  const normalized = path ? (path.startsWith('/') ? path : '/' + path) : '/'
+  const normalized = path ? (path.startsWith('/') ? (path.endsWith('/') ? path : path + '/') : '/' + path + '/') : '/'
   return Alova.Post<FileResponse>(
     '/file/list/',
     { path: normalized },
@@ -42,7 +42,7 @@ export const listFilesByPath = (path: string) => {
 // Create a folder under a given path
 export const createFolder = (path: string, name: string) => {
   const access = getTokenCookies().access
-  const normalized = path ? (path.startsWith('/') ? path : '/' + path) : '/'
+  const normalized = path ? (path.startsWith('/') ? (path.endsWith('/') ? path : path + '/') : '/' + path + '/') : '/'
   return Alova.Post<FolderCreateResponse>(
     '/file/new-folder/',
     { path: normalized, folder_name: name },
@@ -52,15 +52,28 @@ export const createFolder = (path: string, name: string) => {
   )
 }
 
+// Batch move files to a new path
+export const moveFiles = (ids: number[], targetPath: string) => {
+  const access = getTokenCookies().access
+  const normalizedPath = targetPath ? (targetPath.startsWith('/') ? (targetPath.endsWith('/') ? targetPath : targetPath + '/') : '/' + targetPath + '/') : '/'
+  return Promise.all(
+    ids.map((id) =>
+      Alova.Post<FileUpdateResponse>(`/file/${id}/update/`, { path: normalizedPath }, {
+        headers: access ? { Authorization: `Bearer ${access}` } : undefined,
+      })
+    )
+  )
+}
+
 // Delete multiple entries (files or folders) by ids
 export const deleteFiles = (ids: number[]) => {
   const access = getTokenCookies().access
-  return Alova.Post<FileDeleteResponse>(
-    '/file/delete/',
-    { ids },
-    {
-      headers: access ? { Authorization: `Bearer ${access}` } : undefined,
-    }
+  return Promise.all(
+    ids.map((id) =>
+      Alova.Post<FileDeleteResponse>(`/file/${id}/delete/`, {}, {
+        headers: access ? { Authorization: `Bearer ${access}` } : undefined,
+      })
+    )
   )
 }
 
@@ -86,6 +99,11 @@ export const updateFile = (
   }>
 ) => {
   const access = getTokenCookies().access
+  // Normalize path to ensure it ends with '/'
+  if (data.path && data.path !== '/') {
+    const path = data.path.startsWith('/') ? data.path : '/' + data.path
+    data.path = path.endsWith('/') ? path : path + '/'
+  }
   return Alova.Post<FileUpdateResponse>(`/file/${id}/update/`, data, {
     headers: access ? { Authorization: `Bearer ${access}` } : undefined,
   })
@@ -99,3 +117,4 @@ export const downloadFile = (id: number) => {
     { headers: access ? { Authorization: `Bearer ${access}` } : undefined }
   )
 }
+

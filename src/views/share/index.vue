@@ -1,0 +1,529 @@
+<template>
+  <div class="share-page">
+    <n-card class="share-card" :bordered="false">
+      <template #header>
+        <h2>Access Shared Files</h2>
+      </template>
+
+      <n-space vertical size="large">
+        <n-alert v-if="errorMessage" type="error" :bordered="false">
+          {{ errorMessage }}
+        </n-alert>
+
+        <n-form
+          ref="formRef"
+          label-placement="top"
+          :model="formModel"
+          :rules="formRules"
+          @submit.prevent="loadShare"
+        >
+          <n-form-item label="Share Code" path="code">
+            <n-input
+              v-model:value="formModel.code"
+              placeholder="Enter share code"
+              clearable
+              :maxlength="10"
+              show-count
+            />
+          </n-form-item>
+
+          <n-form-item label="Password (if required)" path="password">
+            <n-input
+              v-model:value="formModel.password"
+              type="password"
+              placeholder="Enter password if needed"
+              clearable
+            />
+          </n-form-item>
+
+          <n-form-item>
+            <n-button
+              type="primary"
+              :loading="loading"
+              @click="handleSubmit"
+              block
+            >
+              Access Files
+            </n-button>
+          </n-form-item>
+        </n-form>
+
+        <n-spin :show="loading">
+          <div v-if="drop">
+            <n-alert type="info" :bordered="false" class="share-info">
+              <div class="info-row">
+                <span class="label">Share Code:</span>
+                <span class="value">{{ drop.code }}</span>
+              </div>
+              <div class="info-row">
+                <span class="label">Expires:</span>
+                <span class="value">{{ expireDisplay }}</span>
+              </div>
+              <div class="info-row">
+                <span class="label">Downloads:</span>
+                <span class="value">{{ drop.download_count }} / {{ drop.max_download_count }}</span>
+              </div>
+              <div v-if="drop.require_login" class="info-row">
+                <span class="label">Login required:</span>
+                <span class="value">Yes</span>
+              </div>
+            </n-alert>
+
+            <div v-if="files.length > 0">
+              <div class="share-toolbar" v-if="isLoggedIn">
+                <n-button
+                  type="success"
+                  :loading="savingAll"
+                  :disabled="savingAll"
+                  @click="saveEntireShare"
+                >
+                  转存分享内容
+                </n-button>
+              </div>
+
+              <div v-if="shareTree.length > 0" class="share-tree">
+                <div class="section-title">目录结构</div>
+                <n-tree
+                  :key="drop?.id || drop?.code || 'share-tree'"
+                  :data="shareTreeData"
+                  :block-line="true"
+                  :show-line="true"
+                  :selectable="true"
+                  :default-expanded-keys="shareTreeExpandedKeys"
+                  :selected-keys="treeSelectedKeys"
+                  @update:selected-keys="handleTreeSelect"
+                />
+              </div>
+
+              <div class="current-path">当前目录：{{ currentFolderPath }}</div>
+
+              <n-data-table
+                :data="currentEntries"
+                :columns="columns"
+                :single-line="false"
+                :row-key="rowKey"
+                :row-props="rowProps"
+                class="files-table"
+              />
+            </div>
+            <div v-else>
+              <n-empty description="No files available in this share" />
+            </div>
+          </div>
+          <div v-else-if="!loading">
+            <n-empty description="Enter share code and password (if needed) to access files" />
+          </div>
+        </n-spin>
+      </n-space>
+    </n-card>
+  </div>
+</template>
+
+<script lang="ts" setup>
+import { computed, h, reactive, ref, watch } from 'vue'
+import { useMessage, NButton, NSpace, type FormInst, type FormRules } from 'naive-ui'
+import type { DataTableColumns } from 'naive-ui'
+import type { FileRecord } from '@/api/files/type'
+import type { DropDetailResponse, DropRecord } from '@/api/drop/type'
+import { getDrop } from '@/api/drop/api'
+import { downloadFile, notifyFilesUploaded } from '@/api/files/api'
+import { getTokenCookies } from '@/utils/userUtils'
+import { buildShareTree, collectTreeKeys, type ShareTreeOption } from '@/utils/shareTree'
+
+const message = useMessage()
+const formRef = ref<FormInst | null>(null)
+
+interface FormModel {
+  code: string
+  password: string
+}
+
+const formModel = reactive<FormModel>({
+  code: '',
+  password: '',
+})
+
+const formRules: FormRules = {
+  code: {
+    required: true,
+    message: 'Please enter share code',
+    trigger: ['blur', 'input']
+  }
+}
+
+const drop = ref<DropRecord | null>(null)
+const files = ref<FileRecord[]>([])
+const loading = ref(false)
+const savingAll = ref(false)
+const errorMessage = ref('')
+const isLoggedIn = computed(() => {
+  const { access, refresh } = getTokenCookies()
+  return !!(access && refresh)
+})
+
+const shareTree = computed<ShareTreeOption[]>(() => buildShareTree(files.value))
+const shareTreeData = computed<ShareTreeOption[]>(() => [
+  {
+    key: '__root__',
+    label: '/',
+    type: 'folder',
+    children: shareTree.value,
+  },
+])
+const shareTreeExpandedKeys = computed(() => ['__root__', ...collectTreeKeys(shareTree.value)])
+const currentTreeKey = ref('__root__')
+const treeSelectedKeys = computed(() => [currentTreeKey.value])
+
+interface ShareEntry {
+  key: string
+  type: 'folder' | 'file'
+  name: string
+  record?: FileRecord
+}
+
+const currentTreeNode = computed(() =>
+  findTreeNode(shareTreeData.value, currentTreeKey.value)
+)
+
+const currentEntries = computed<ShareEntry[]>(() => {
+  const node = currentTreeNode.value
+  if (!node?.children) return []
+  return node.children.map((child) => ({
+    key: String(child.key),
+    type: child.type as ShareEntry['type'],
+    name: String(child.label ?? ''),
+    record: child.record,
+  }))
+})
+
+const currentFolderPath = computed(() => {
+  if (currentTreeKey.value === '__root__') return '/'
+  const key = currentTreeKey.value
+  if (key.startsWith('dir-')) {
+    const path = key.slice(4)
+    return path ? path : '/'
+  }
+  return '/'
+})
+
+const columns = computed<DataTableColumns<ShareEntry>>(() => [
+  { title: 'Name', key: 'name', minWidth: 260 },
+  {
+    title: 'Type',
+    key: 'type',
+    width: 120,
+    render: (row) => (row.type === 'folder' ? '文件夹' : row.record?.content_type || '-'),
+  },
+  {
+    title: 'Size',
+    key: 'size',
+    width: 140,
+    render: (row) => (row.type === 'folder' ? '-' : formatSize(row.record?.size ?? 0)),
+  },
+  {
+    title: 'Actions',
+    key: 'actions',
+    width: 200,
+    render: (row) =>
+      row.type === 'file'
+        ? h(NSpace, { size: 'small' }, {
+            default: () => [
+              h(
+                NButton,
+                {
+                  text: true,
+                  type: 'primary',
+                  onClick: () => row.record && downloadShared(row.record),
+                },
+                { default: () => '下载' }
+              ),
+              ...(isLoggedIn.value
+                ? [
+                    h(
+                      NButton,
+                      {
+                        text: true,
+                        type: 'success',
+                        onClick: () => row.record && saveToMy(row.record),
+                      },
+                      { default: () => '转存' }
+                    ),
+                  ]
+                : []),
+            ],
+          })
+        : null,
+  },
+])
+
+const rowKey = (row: ShareEntry) => row.key
+
+const rowProps = (row: ShareEntry) => ({
+  onClick: () => {
+    if (row.type === 'folder') openFolder(row.key)
+  },
+  onDblclick: () => {
+    if (row.type === 'folder') openFolder(row.key)
+  },
+})
+
+const expireDisplay = computed(() => {
+  if (!drop.value) return '-'
+  if (!drop.value.expire_time) return 'No expiration'
+  try {
+    return new Intl.DateTimeFormat(undefined, {
+      year: 'numeric',
+      month: '2-digit',
+      day: '2-digit',
+      hour: '2-digit',
+      minute: '2-digit',
+    }).format(new Date(drop.value.expire_time))
+  } catch {
+    return drop.value.expire_time
+  }
+})
+
+async function handleSubmit() {
+  try {
+    await formRef.value?.validate()
+    await loadShare()
+  } catch (error) {
+    console.error('Form validation failed:', error)
+  }
+}
+
+async function loadShare() {
+  if (!formModel.code.trim()) {
+    message.warning('Please enter share code')
+    return
+  }
+
+  loading.value = true
+  errorMessage.value = ''
+  drop.value = null
+  files.value = []
+  currentTreeKey.value = '__root__'
+
+  try {
+    const payload: { code: string; password?: string } = {
+      code: formModel.code.trim()
+    }
+    if (formModel.password.trim()) {
+      payload.password = formModel.password.trim()
+    }
+
+    const resp = await getDrop(payload)
+    handleResponse(resp)
+    message.success('Files loaded successfully')
+  } catch (error: any) {
+    console.error(error)
+    const msg = error?.response?.data?.message || error?.message || 'Failed to load shared files'
+    errorMessage.value = msg
+    message.error(msg)
+  } finally {
+    loading.value = false
+  }
+}
+
+function handleResponse(resp: DropDetailResponse) {
+  drop.value = resp.drop
+  files.value = Array.isArray(resp.files) ? resp.files : []
+  currentTreeKey.value = '__root__'
+}
+
+function handleTreeSelect(keys: Array<string | number>) {
+  if (!keys || keys.length === 0) return
+  const nextKey = String(keys[0])
+  const node = findTreeNode(shareTreeData.value, nextKey)
+  if (node?.type === 'folder') {
+    currentTreeKey.value = nextKey
+  }
+}
+
+watch(
+  () => shareTreeData.value,
+  () => {
+    if (!findTreeNode(shareTreeData.value, currentTreeKey.value)) {
+      currentTreeKey.value = '__root__'
+    }
+  },
+  { deep: true }
+)
+
+function openFolder(key: string) {
+  handleTreeSelect([key])
+}
+
+async function downloadShared(file: FileRecord) {
+  if (!file) return
+  try {
+    let url = file.oss_url
+    const { access } = getTokenCookies()
+    if (access) {
+      const data = await downloadFile(file.id)
+      url = (data as any)?.download_url || url
+    }
+    if (!url) throw new Error('No download url')
+    triggerDownload(url, file.name)
+  } catch (error) {
+    console.error(error)
+    message.error('Download failed')
+  }
+}
+
+async function saveToMy(file: FileRecord) {
+  if (!file) return
+  if (!isLoggedIn.value) {
+    message.warning('Please log in to save files')
+    return
+  }
+
+  try {
+    // Use notify API to create a file record in user's account without uploading
+    const notifyItems = [{
+      name: file.name,
+      content_type: file.content_type,
+      size: file.size,
+      oss_url: file.oss_url,
+      path: normalizeNotifyPath(file.path),
+    }]
+
+    await notifyFilesUploaded(notifyItems)
+    message.success(`${file.name} has been saved to your files`)
+  } catch (error: any) {
+    console.error(error)
+    const msg = error?.response?.data?.message || error?.message || 'Failed to save file'
+    message.error(msg)
+  }
+}
+
+async function saveEntireShare() {
+  if (!drop.value) return
+  if (!isLoggedIn.value) {
+    message.warning('请先登录后再转存分享内容')
+    return
+  }
+
+  const targets = files.value.filter((item) => item.content_type !== 'folder')
+  if (targets.length === 0) {
+    message.warning('暂无可转存的文件')
+    return
+  }
+
+  savingAll.value = true
+  try {
+    const notifyItems = targets.map((file) => ({
+      name: file.name,
+      content_type: file.content_type,
+      size: file.size,
+      oss_url: file.oss_url,
+      path: normalizeNotifyPath(file.path),
+    }))
+
+    await notifyFilesUploaded(notifyItems)
+    message.success('分享内容已转存到你的云盘')
+  } catch (error: any) {
+    console.error(error)
+    const msg = error?.response?.data?.message || error?.message || '转存分享内容失败'
+    message.error(msg)
+  } finally {
+    savingAll.value = false
+  }
+}
+
+function triggerDownload(url: string, filename: string) {
+  const anchor = document.createElement('a')
+  anchor.href = url
+  anchor.download = filename || ''
+  anchor.rel = 'noopener'
+  anchor.target = '_blank'
+  document.body.appendChild(anchor)
+  anchor.click()
+  document.body.removeChild(anchor)
+}
+
+function normalizeNotifyPath(rawPath: string | null | undefined): string {
+  if (!rawPath) return '/'
+  const trimmed = rawPath.replace(/^\/+/, '').replace(/\/+$/, '')
+  return trimmed ? `/${trimmed}/` : '/'
+}
+
+function findTreeNode(nodes: ShareTreeOption[], key: string): ShareTreeOption | null {
+  for (const node of nodes) {
+    if (String(node.key) === key) return node
+    if (node.children && node.children.length > 0) {
+      const found = findTreeNode(node.children as ShareTreeOption[], key)
+      if (found) return found
+    }
+  }
+  return null
+}
+
+function formatSize(size: number) {
+  if (!Number.isFinite(size)) return '-'
+  if (size < 1024) return `${size} B`
+  if (size < 1024 * 1024) return `${(size / 1024).toFixed(1)} KB`
+  if (size < 1024 * 1024 * 1024) return `${(size / 1024 / 1024).toFixed(1)} MB`
+  return `${(size / 1024 / 1024 / 1024).toFixed(1)} GB`
+}
+</script>
+
+<style scoped>
+.share-page {
+  padding: 24px;
+  max-width: 1000px;
+  margin: 0 auto;
+}
+
+.share-card {
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+}
+
+.share-info {
+  margin-bottom: 16px;
+}
+
+.share-toolbar {
+  display: flex;
+  justify-content: flex-end;
+  margin-bottom: 12px;
+}
+
+.share-tree {
+  margin-bottom: 16px;
+}
+
+.share-tree :deep(.n-tree-node-content) {
+  cursor: pointer;
+}
+
+.current-path {
+  margin-bottom: 12px;
+  font-weight: 500;
+}
+
+.section-title {
+  font-weight: 600;
+  margin-bottom: 8px;
+}
+
+.info-row {
+  display: flex;
+  justify-content: space-between;
+  margin-bottom: 4px;
+}
+
+.label {
+  font-weight: 500;
+  color: #666;
+}
+
+.value {
+  font-weight: 600;
+  color: #333;
+}
+
+.files-table {
+  margin-top: 16px;
+}
+</style>

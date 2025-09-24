@@ -22,6 +22,11 @@ const router = createRouter({
       component: () => import('@/views/auth/logout.vue'),
     },
     {
+      path: '/share/:code',
+      name: 'ShareDownload',
+      component: () => import('@/views/drop/share.vue'),
+    },
+    {
       path: '/',
       component: Layout,
       children: [
@@ -46,15 +51,20 @@ const router = createRouter({
           name: 'Settings',
           component: () => import('@/views/settings/index.vue'),
         },
+        {
+          path: '/share',
+          name: 'Share',
+          component: () => import('@/views/share/index.vue'),
+        },
       ],
     },
   ],
 })
 
-// Require auth for all routes except '/', '/login', '/register'
+// Require auth for routes not in whiteList and not under /share
 const whiteList = ['/', '/login', '/register']
 router.beforeEach((to, _from, next) => {
-  if (whiteList.includes(to.path)) return next()
+  if (whiteList.includes(to.path) || to.path.startsWith('/share')) return next()
   const { access, refresh } = getTokenCookies()
   if (access && refresh) return next()
   next({ path: '/login', query: { redirect: to.fullPath } })

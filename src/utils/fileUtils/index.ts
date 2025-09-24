@@ -194,7 +194,7 @@ export async function uploadAndNotify(
   const body = buildNotifyBody(uploaded, opts?.notifyPath || '/')
   // Use Alova instance to send notify request
   const request = notifyBackendUploaded(body)
-  return request.send()
+  return request
 }
 
 /** Convenience: compute OSS object key for a file using the token prefix. */
