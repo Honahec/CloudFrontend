@@ -224,8 +224,8 @@ const goLogin = () => {
 .register-card {
   width: 460px;
   max-width: 92vw;
-  background: var(--color-card-bg);
-  border: 1px solid var(--color-border);
+  background: rgb(var(--color-surface-muted));
+  border: 1px solid var(--border-color-subtle);
   border-radius: 20px;
   padding: 28px;
   box-shadow: 0 28px 90px rgba(17, 17, 17, 0.08);
@@ -244,7 +244,7 @@ const goLogin = () => {
   margin: 0;
   font-size: 20px;
   font-weight: 600;
-  color: var(--color-text);
+  color: rgb(var(--color-text-primary));
 }
 .col {
   display: flex;

@@ -73,18 +73,29 @@ export const createFolder = (path: string, name: string) => {
   )
 }
 
-// Batch move files to a new path
-export const moveFiles = (ids: number[], targetPath: string) => {
+// Batch move files or folders to their new parent paths
+export interface MoveTarget {
+  id: number
+  path: string
+}
+
+export const moveFiles = (targets: MoveTarget[]) => {
   const access = getTokenCookies().access
-  const normalizedPath = targetPath ? (targetPath.startsWith('/') ? (targetPath.endsWith('/') ? targetPath : targetPath + '/') : '/' + targetPath + '/') : '/'
+  if (!Array.isArray(targets) || targets.length === 0) return Promise.resolve([])
   return Promise.all(
-    ids.map((id) =>
-      Alova.Post<FileUpdateResponse>(`/file/${id}/update/`, { path: normalizedPath }, {
-        headers: access ? { Authorization: `Bearer ${access}` } : undefined,
-      })
-    )
+    targets.map(({ id, path }) => {
+      const normalizedPath = normalizeDrivePath(path)
+      return Alova.Post<FileUpdateResponse>(
+        `/file/${id}/update/`,
+        { path: normalizedPath },
+        {
+          headers: access ? { Authorization: `Bearer ${access}` } : undefined,
+        }
+      )
+    })
   )
 }
+
 
 // Delete multiple entries (files or folders) by ids
 export const deleteFiles = (ids: number[]) => {

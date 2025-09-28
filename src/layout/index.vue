@@ -70,7 +70,7 @@
                 @select="onUserMenuSelect"
               >
                 <div class="auth-trigger sidebar-field" ref="triggerRef">
-                  <n-button type="primary" tertiary block>
+                  <n-button type="primary" block>
                     {{ displayName || userName || t('common.actions.account') }}
                   </n-button>
                 </div>
@@ -246,7 +246,7 @@ const onAuthMenuSelect = (key: string) => {
 <style scoped>
 .layout {
   min-height: 100vh;
-  background: var(--color-page-bg);
+  background: rgb(var(--color-surface));
 }
 
 .sidebar {
@@ -254,8 +254,8 @@ const onAuthMenuSelect = (key: string) => {
   flex-direction: column;
   padding: 24px 18px;
   box-sizing: border-box;
-  border-right: 1px solid var(--color-border);
-  background: var(--color-card-bg);
+  border-right: 1px solid var(--border-color-subtle);
+  background: rgb(var(--color-surface-muted));
   min-height: 100vh;
 }
 
@@ -283,7 +283,7 @@ const onAuthMenuSelect = (key: string) => {
   width: 36px;
   height: 36px;
   border-radius: 12px;
-  background: linear-gradient(135deg, #111111, #3f3f46);
+  background: linear-gradient(135deg, #d7c8ee, #9a72d3);
 }
 
 .brand-text {
@@ -295,12 +295,12 @@ const onAuthMenuSelect = (key: string) => {
 .brand-name {
   font-size: 18px;
   font-weight: 700;
-  color: var(--color-text);
+  color: rgb(var(--color-brand-000));
 }
 
 .brand-desc {
   font-size: 12px;
-  color: var(--color-subtle-text);
+  color: rgb(var(--color-brand-000));
 }
 
 .menu {
@@ -327,7 +327,7 @@ const onAuthMenuSelect = (key: string) => {
 
 .control-label {
   font-size: 12px;
-  color: var(--color-subtle-text);
+  color: rgb(var(--color-brand-500));
   text-transform: uppercase;
   letter-spacing: 0.08em;
 }
@@ -358,7 +358,7 @@ const onAuthMenuSelect = (key: string) => {
 }
 
 .content {
-  background: var(--color-page-bg);
+  background: rgb(var(--color-surface));
   padding: 32px 40px;
   box-sizing: border-box;
 }

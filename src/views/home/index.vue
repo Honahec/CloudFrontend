@@ -76,9 +76,9 @@ const goRegister = () => {
   display: grid;
   gap: 48px;
   padding: 32px;
-  background: var(--color-card-bg);
+  background: rgb(var(--color-surface-muted));
   border-radius: 24px;
-  border: 1px solid var(--color-border);
+  border: 1px solid var(--border-color-subtle);
   box-shadow: 0 32px 120px rgba(17, 17, 17, 0.08);
 }
 
@@ -93,13 +93,13 @@ const goRegister = () => {
   margin: 0;
   font-size: clamp(32px, 5vw, 48px);
   line-height: 1.2;
-  color: var(--color-text);
+  color: rgb(var(--color-text-primary));
 }
 
 .hero p {
   margin: 0;
   font-size: 16px;
-  color: var(--color-subtle-text);
+  color: rgb(var(--color-text-secondary));
   max-width: 520px;
 }
 
@@ -121,14 +121,14 @@ const goRegister = () => {
   align-items: center;
   gap: 12px;
   padding: 16px 20px;
-  background: rgba(17, 17, 17, 0.04);
+  background: rgb(var(--color-border) / 0.04);
   border-radius: 16px;
-  color: var(--color-text);
+  color: rgb(var(--color-text-primary));
   transition: background 0.2s ease;
 }
 
 [data-theme='dark'] .highlight {
-  background: rgba(244, 244, 245, 0.06);
+  background: rgb(var(--color-border) / 0.12);
 }
 
 .highlight-dot {

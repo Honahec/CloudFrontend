@@ -172,6 +172,7 @@ const en = {
     confirm: 'Move here',
     failed: 'Failed to load folders',
     root: 'Drive',
+    invalidTarget: 'Cannot move a folder into itself or its subfolders',
   },
   shareModal: {
     title: 'Create Share',

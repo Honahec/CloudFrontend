@@ -467,13 +467,13 @@ onMounted(() => {
   justify-content: center;
   align-items: flex-start;
   padding: 40px 16px;
-  background: var(--color-page-bg);
+  background: rgb(var(--color-surface));
   box-sizing: border-box;
 }
 .share-card {
   width: min(60%, 760px);
   border-radius: 28px;
-  border: 1px solid var(--color-border);
+  border: 1px solid var(--border-color-subtle);
   box-shadow: 0 32px 110px rgba(17, 17, 17, 0.08);
 }
 .header {
@@ -486,7 +486,7 @@ onMounted(() => {
 }
 .code {
   font-size: 14px;
-  color: var(--color-subtle-text);
+  color: rgb(var(--color-text-secondary));
 }
 .form-grid {
   display: grid;

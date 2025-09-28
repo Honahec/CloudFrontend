@@ -3,25 +3,75 @@
 @tailwind utilities;
 
 :root {
+  color-scheme: light;
   font-family: 'Inter', 'HarmonyOS Sans', 'PingFang SC', 'Microsoft YaHei', system-ui, -apple-system, sans-serif;
-  color: #111111;
-  background-color: #f7f7f8;
   line-height: 1.6;
-  --color-page-bg: #f7f7f8;
-  --color-card-bg: #ffffff;
-  --color-border: rgba(0, 0, 0, 0.08);
-  --color-text: #111111;
-  --color-subtle-text: #4b5563;
+  --color-brand-100: 243 239 250;
+  --color-brand-200: 237 228 247;
+  --color-brand-300: 215 200 238;
+  --color-brand-400: 232 223 245;
+  --color-brand-500: 182 153 223;
+  --color-brand-600: 154 114 211;
+  --color-surface: 247 247 248;
+  --color-surface-muted: 255 255 255;
+  --color-surface-overlay: 255 255 255;
+  --color-surface-inverted: 11 11 13;
+  --color-text-primary: 17 17 17;
+  --color-text-secondary: 75 85 99;
+  --color-text-inverted: 244 244 245;
+  --color-border: 17 17 17;
+  --color-border-strong: 17 17 17;
+  --border-color-subtle: rgb(var(--color-border) / 0.08);
+  --border-color-strong: rgb(var(--color-border-strong) / 0.16);
+  --color-button-primary-bg: 232 223 245;
+  --color-button-primary-fg: 17 17 17;
+  --color-button-ghost-bg: 255 255 255;
+  --color-focus-ring: 232 223 245;
+  --color-success: 47 143 96;
+  --color-warning: 217 119 6;
+  --color-error: 220 38 38;
+  --color-info: 37 99 235;
+  --color-success-bg: 232 246 238;
+  --color-warning-bg: 255 243 230;
+  --color-error-bg: 254 236 235;
+  --color-info-bg: 231 242 255;
+}
+
+:root {
+  color: rgb(var(--color-text-primary));
+  background-color: rgb(var(--color-surface));
 }
 
 :root[data-theme='dark'] {
-  color: #f4f4f5;
-  background-color: #0b0b0d;
-  --color-page-bg: #0b0b0d;
-  --color-card-bg: #141417;
-  --color-border: rgba(255, 255, 255, 0.1);
-  --color-text: #f4f4f5;
-  --color-subtle-text: #a1a1aa;
+  --color-brand-100: 243 239 250;
+  --color-brand-200: 237 228 247;
+  --color-brand-300: 215 200 238;
+  --color-brand-400: 232 223 245;
+  --color-brand-500: 182 153 223;
+  --color-brand-600: 154 114 211;
+  --color-surface: 11 11 13;
+  --color-surface-muted: 20 20 23;
+  --color-surface-overlay: 27 27 32;
+  --color-surface-inverted: 247 247 248;
+  --color-text-primary: 244 244 245;
+  --color-text-secondary: 161 161 170;
+  --color-text-inverted: 17 17 17;
+  --color-border: 244 244 245;
+  --color-border-strong: 244 244 245;
+  --border-color-subtle: rgb(var(--color-border) / 0.1);
+  --border-color-strong: rgb(var(--color-border-strong) / 0.24);
+  --color-button-primary-bg: 182 153 223;
+  --color-button-primary-fg: 17 17 17;
+  --color-button-ghost-bg: 20 20 23;
+  --color-focus-ring: 232 223 245;
+  --color-success: 118 214 165;
+  --color-warning: 245 196 120;
+  --color-error: 248 124 124;
+  --color-info: 125 173 255;
+  --color-success-bg: 26 56 43;
+  --color-warning-bg: 68 42 16;
+  --color-error-bg: 74 26 29;
+  --color-info-bg: 27 43 72;
 }
 
 html,
@@ -32,8 +82,8 @@ body,
 
 body {
   margin: 0;
-  background: var(--color-page-bg);
-  color: var(--color-text);
+  background: rgb(var(--color-surface));
+  color: rgb(var(--color-text-primary));
   transition: background-color 0.2s ease, color 0.2s ease;
 }
 
@@ -46,8 +96,19 @@ a:hover {
   text-decoration: underline;
 }
 
-.n-card {
-  background-color: var(--color-card-bg) !important;
-  border-radius: 16px !important;
-  border: 1px solid var(--color-border) !important;
+button,
+input,
+textarea,
+select {
+  font: inherit;
+  color: inherit;
 }
+
+.n-card {
+  background-color: rgb(var(--color-surface-muted)) !important;
+  border-radius: 16px !important;
+  border: 1px solid var(--border-color-subtle) !important;
+}
+
+
+

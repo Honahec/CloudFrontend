@@ -5,12 +5,11 @@
         <n-button type="primary" round size="medium" @click="onNewFolder">
           {{ t('drive.toolbar.newFolder') }}
         </n-button>
-        <n-button type="primary" tertiary round size="medium" @click="onUpload">
+        <n-button type="primary" round size="medium" @click="onUpload">
           {{ t('drive.toolbar.upload') }}
         </n-button>
         <n-button
-          type="primary"
-          tertiary
+          quaternary
           round
           size="medium"
           @click="onShare"
@@ -231,23 +230,67 @@ async function fetchFiles() {
   }
 }
 
+function normalizeDirectoryPath(path: string | null | undefined): string {
+  if (typeof path !== 'string') return '/'
+  const cleaned = path.trim()
+  if (cleaned === '' || cleaned === '/') return '/'
+  const trimmed = cleaned.replace(/^\/+|\/+$/g, '')
+  return trimmed ? `/${trimmed}/` : '/'
+}
+
 function buildListPath(path: string): string {
-  if (!path) return '/'
-  const trimmed = path.replace(/^\/+/, '').replace(/\/+$/, '')
-  return `/${trimmed}/`
+  return normalizeDirectoryPath(path)
 }
 
 function buildNotifyPath(path: string): string {
-  if (!path) return '/'
-  const trimmed = path.replace(/^\/+/, '').replace(/\/+$/, '')
-  return `/${trimmed}/`
+  return normalizeDirectoryPath(path)
 }
 
 function buildUpdatePath(path: string): string {
-  if (!path || path === '/') return '/'
-  const trimmed = path.replace(/^\/+/, '').replace(/\/+$/, '')
-  return `/${trimmed}/`
+  return normalizeDirectoryPath(path)
 }
+
+function joinFolderPath(parentPath: string | null | undefined, name: string): string {
+  const parent = normalizeDirectoryPath(parentPath)
+  const segment = name.replace(/^\/+|\/+$/g, '')
+  if (!segment) return parent
+  return parent === '/' ? `/${segment}/` : `${parent}${segment}/`
+}
+
+function replacePathPrefix(path: string, oldPrefix: string, newPrefix: string): string {
+  const normalizedPath = normalizeDirectoryPath(path)
+  const normalizedOld = normalizeDirectoryPath(oldPrefix)
+  const normalizedNew = normalizeDirectoryPath(newPrefix)
+  if (normalizedOld === '/') {
+    if (normalizedNew === '/') return normalizedPath
+    return `${normalizedNew}${normalizedPath.slice(1)}`
+  }
+  if (normalizedPath.startsWith(normalizedOld)) {
+    return `${normalizedNew}${normalizedPath.slice(normalizedOld.length)}`
+  }
+  return normalizedPath
+}
+
+async function collectFolderDescendants(folder: FileRecord): Promise<FileRecord[]> {
+  const gathered: FileRecord[] = []
+  const startPath = joinFolderPath(folder.path, folder.name)
+
+  async function traverse(path: string) {
+    const resp = await listFilesByPath(path)
+    const items = Array.isArray((resp as any)?.files) ? (resp as any).files : []
+    for (const item of items) {
+      gathered.push(item)
+      if (item.content_type === 'folder') {
+        const nextPath = joinFolderPath(path, item.name)
+        await traverse(nextPath)
+      }
+    }
+  }
+
+  await traverse(startPath)
+  return gathered
+}
+
 
 function goRoot() {
   router.push({ name: 'Drive' })
@@ -357,9 +400,37 @@ function openMoveDialog() {
 async function handleMoveConfirm(dest: string) {
   if (selected.value.length === 0) return
   const normalized = buildUpdatePath(dest)
+
+  const hasInvalidTarget = selected.value.some((item) => {
+    if (item.content_type !== 'folder') return false
+    const folderFullPath = joinFolderPath(item.path, item.name)
+    return normalized.startsWith(folderFullPath)
+  })
+  if (hasInvalidTarget) {
+    message.error(t('moveDialog.invalidTarget'))
+    return
+  }
+
   try {
-    const fileIds = selected.value.map((file) => file.id)
-    await moveFiles(fileIds, normalized)
+    const moveMap = new Map<number, string>()
+
+    for (const record of selected.value) {
+      if (record.content_type === 'folder') {
+        moveMap.set(record.id, normalized)
+        const originalFolderPath = joinFolderPath(record.path, record.name)
+        const targetFolderPath = joinFolderPath(normalized, record.name)
+        const descendants = await collectFolderDescendants(record)
+        for (const entry of descendants) {
+          const nextPath = replacePathPrefix(entry.path, originalFolderPath, targetFolderPath)
+          moveMap.set(entry.id, nextPath)
+        }
+      } else {
+        moveMap.set(record.id, normalized)
+      }
+    }
+
+    const payload = Array.from(moveMap.entries()).map(([id, path]) => ({ id, path }))
+    await moveFiles(payload)
     message.success(t('common.feedback.moveSuccess'))
     moveDialogVisible.value = false
     selected.value = []
@@ -569,9 +640,9 @@ watch(
   flex-direction: column;
   gap: 12px;
   padding: 16px 20px;
-  border: 1px solid var(--color-border);
+  border: 1px solid var(--border-color-subtle);
   border-radius: 18px;
-  background: var(--color-card-bg);
+  background: rgb(var(--color-surface-muted));
   box-shadow: 0 12px 40px rgba(17, 17, 17, 0.06);
 }
 

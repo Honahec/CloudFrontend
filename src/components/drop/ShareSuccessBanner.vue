@@ -116,7 +116,7 @@ async function copyText(text: string) {
   justify-content: flex-end;
 }
 .label {
-  color: #4b5563;
+  color: rgb(var(--color-text-secondary));
   min-width: 88px;
 }
 .value {

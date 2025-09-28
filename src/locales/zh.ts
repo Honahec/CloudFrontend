@@ -172,6 +172,7 @@ const zh = {
     confirm: '移动到此处',
     failed: '加载文件夹失败',
     root: '云盘',
+    invalidTarget: '无法将文件夹移动到自身或其子文件夹',
   },
   shareModal: {
     title: '创建分享',

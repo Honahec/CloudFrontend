@@ -64,8 +64,8 @@ function progressStatus(status: UploadProgressStatus) {
   flex-direction: column;
   gap: 12px;
   padding: 12px;
-  background-color: rgba(255, 255, 255, 0.9);
-  border: 1px solid rgba(0, 0, 0, 0.06);
+  background-color: rgb(var(--color-surface-muted) / 0.9);
+  border: 1px solid var(--border-color-subtle);
   border-radius: 12px;
   box-shadow: 0 8px 18px rgba(15, 23, 42, 0.12);
   max-width: 360px;
@@ -82,7 +82,7 @@ function progressStatus(status: UploadProgressStatus) {
   align-items: center;
   justify-content: space-between;
   font-size: 13px;
-  color: #475569;
+  color: rgb(var(--color-text-secondary));
 }
 
 .item-name {
@@ -93,21 +93,21 @@ function progressStatus(status: UploadProgressStatus) {
   text-overflow: ellipsis;
   white-space: nowrap;
   font-weight: 500;
-  color: #1f2937;
+  color: rgb(var(--color-text-primary));
 }
 
 .item-status {
   text-transform: uppercase;
   font-size: 12px;
-  color: #0ea5e9;
+  color: rgb(var(--color-info));
 }
 
 .item-status.success {
-  color: #22c55e;
+  color: rgb(var(--color-success));
 }
 
 .item-status.error {
-  color: #ef4444;
+  color: rgb(var(--color-error));
 }
 
 .item-progress {
@@ -120,6 +120,6 @@ function progressStatus(status: UploadProgressStatus) {
   width: 40px;
   text-align: right;
   font-size: 12px;
-  color: #475569;
+  color: rgb(var(--color-text-secondary));
 }
 </style>

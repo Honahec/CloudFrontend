@@ -433,7 +433,7 @@ watch(
   margin-bottom: 8px;
 }
 .hint {
-  color: #6b7280;
+  color: rgb(var(--color-text-secondary));
 }
 .form-grid {
   display: grid;

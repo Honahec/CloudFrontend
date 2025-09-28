@@ -534,7 +534,7 @@ function formatSize(size: number) {
 
 .share-card {
   border-radius: 24px;
-  border: 1px solid var(--color-border);
+  border: 1px solid var(--border-color-subtle);
   box-shadow: 0 24px 80px rgba(17, 17, 17, 0.08);
 }
 
@@ -564,7 +564,7 @@ function formatSize(size: number) {
 .section-title {
   font-weight: 600;
   margin-bottom: 8px;
-  color: var(--color-text);
+  color: rgb(var(--color-text-primary));
 }
 
 .info-row {
@@ -575,12 +575,12 @@ function formatSize(size: number) {
 
 .label {
   font-weight: 500;
-  color: var(--color-subtle-text);
+  color: rgb(var(--color-text-secondary));
 }
 
 .value {
   font-weight: 600;
-  color: var(--color-text);
+  color: rgb(var(--color-text-primary));
 }
 
 .files-table {

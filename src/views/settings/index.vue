@@ -282,10 +282,10 @@ onMounted(async () => {
 }
 
 .n-card {
-  border: 1px solid var(--color-border);
+  border: 1px solid var(--border-color-subtle);
   border-radius: 20px;
   padding: 24px;
-  background: var(--color-card-bg);
+  background: rgb(var(--color-surface-muted));
   box-shadow: 0 24px 80px rgba(17, 17, 17, 0.06);
 }
 
@@ -302,10 +302,10 @@ onMounted(async () => {
 }
 
 .avatar {
-  border: 2px solid var(--color-border);
+  border: 2px solid var(--border-color-strong);
   font-size: 48px;
-  background: var(--color-page-bg);
-  color: var(--color-text);
+  background: rgb(var(--color-surface));
+  color: rgb(var(--color-text-primary));
 }
 
 .name-wrap {
@@ -317,11 +317,11 @@ onMounted(async () => {
   font-size: 28px;
   font-weight: 600;
   line-height: 1.2;
-  color: var(--color-text);
+  color: rgb(var(--color-text-primary));
 }
 
 .username {
-  color: var(--color-subtle-text);
+  color: rgb(var(--color-text-secondary));
 }
 
 .email-card {
@@ -338,7 +338,7 @@ onMounted(async () => {
 .email-title {
   font-size: 18px;
   font-weight: 600;
-  color: var(--color-text);
+  color: rgb(var(--color-text-primary));
 }
 
 .email-input {

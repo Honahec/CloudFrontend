@@ -45,7 +45,7 @@ function onSegClick(idx: number) {
   padding: 8px 0;
 }
 .link {
-  color: var(--color-text);
+  color: rgb(var(--color-text-primary));
   font-weight: 500;
 }
 .link:hover {
