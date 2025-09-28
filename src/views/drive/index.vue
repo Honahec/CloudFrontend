@@ -220,7 +220,19 @@ async function fetchFiles() {
   try {
     const apiPath = buildListPath(currentPath.value)
     const resp = await listFilesByPath(apiPath)
-    files.value = Array.isArray((resp as any)?.files) ? (resp as any).files : []
+    const rawList = Array.isArray((resp as any)?.files)
+      ? ((resp as any).files as FileRecord[])
+      : []
+    const enriched: FileRecord[] = []
+    for (const record of rawList) {
+      if (record.content_type === 'folder') {
+        const folderSize = await calculateFolderSize(record)
+        enriched.push({ ...record, size: folderSize })
+      } else {
+        enriched.push(record)
+      }
+    }
+    files.value = enriched
     selected.value = []
   } catch (error) {
     console.error(error)
@@ -250,14 +262,21 @@ function buildUpdatePath(path: string): string {
   return normalizeDirectoryPath(path)
 }
 
-function joinFolderPath(parentPath: string | null | undefined, name: string): string {
+function joinFolderPath(
+  parentPath: string | null | undefined,
+  name: string
+): string {
   const parent = normalizeDirectoryPath(parentPath)
   const segment = name.replace(/^\/+|\/+$/g, '')
   if (!segment) return parent
   return parent === '/' ? `/${segment}/` : `${parent}${segment}/`
 }
 
-function replacePathPrefix(path: string, oldPrefix: string, newPrefix: string): string {
+function replacePathPrefix(
+  path: string,
+  oldPrefix: string,
+  newPrefix: string
+): string {
   const normalizedPath = normalizeDirectoryPath(path)
   const normalizedOld = normalizeDirectoryPath(oldPrefix)
   const normalizedNew = normalizeDirectoryPath(newPrefix)
@@ -271,26 +290,54 @@ function replacePathPrefix(path: string, oldPrefix: string, newPrefix: string): 
   return normalizedPath
 }
 
-async function collectFolderDescendants(folder: FileRecord): Promise<FileRecord[]> {
+async function traverseFolder(
+  path: string,
+  visit: (item: FileRecord) => void | Promise<void>
+) {
+  const resp = await listFilesByPath(path)
+  const items = Array.isArray((resp as any)?.files)
+    ? ((resp as any).files as FileRecord[])
+    : []
+  for (const item of items) {
+    await visit(item)
+    if (item.content_type === 'folder') {
+      const nextPath = joinFolderPath(path, item.name)
+      await traverseFolder(nextPath, visit)
+    }
+  }
+}
+
+async function collectFolderDescendants(
+  folder: FileRecord
+): Promise<FileRecord[]> {
   const gathered: FileRecord[] = []
   const startPath = joinFolderPath(folder.path, folder.name)
 
-  async function traverse(path: string) {
-    const resp = await listFilesByPath(path)
-    const items = Array.isArray((resp as any)?.files) ? (resp as any).files : []
-    for (const item of items) {
-      gathered.push(item)
-      if (item.content_type === 'folder') {
-        const nextPath = joinFolderPath(path, item.name)
-        await traverse(nextPath)
-      }
-    }
-  }
+  await traverseFolder(startPath, (item) => {
+    gathered.push(item)
+  })
 
-  await traverse(startPath)
   return gathered
 }
 
+async function calculateFolderSize(folder: FileRecord): Promise<number> {
+  const startPath = joinFolderPath(folder.path, folder.name)
+  let total = 0
+
+  try {
+    await traverseFolder(startPath, (item) => {
+      if (item.content_type === 'folder') return
+      const value = Number(item.size)
+      if (Number.isFinite(value)) total += value
+    })
+  } catch (error) {
+    console.error(`Failed to calculate folder size for ${startPath}`, error)
+    const fallback = Number(folder.size)
+    return Number.isFinite(fallback) ? fallback : 0
+  }
+
+  return total
+}
 
 function goRoot() {
   router.push({ name: 'Drive' })
@@ -421,7 +468,11 @@ async function handleMoveConfirm(dest: string) {
         const targetFolderPath = joinFolderPath(normalized, record.name)
         const descendants = await collectFolderDescendants(record)
         for (const entry of descendants) {
-          const nextPath = replacePathPrefix(entry.path, originalFolderPath, targetFolderPath)
+          const nextPath = replacePathPrefix(
+            entry.path,
+            originalFolderPath,
+            targetFolderPath
+          )
           moveMap.set(entry.id, nextPath)
         }
       } else {
@@ -429,7 +480,10 @@ async function handleMoveConfirm(dest: string) {
       }
     }
 
-    const payload = Array.from(moveMap.entries()).map(([id, path]) => ({ id, path }))
+    const payload = Array.from(moveMap.entries()).map(([id, path]) => ({
+      id,
+      path,
+    }))
     await moveFiles(payload)
     message.success(t('common.feedback.moveSuccess'))
     moveDialogVisible.value = false
