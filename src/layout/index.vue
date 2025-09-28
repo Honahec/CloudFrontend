@@ -26,17 +26,17 @@
             <span class="control-label">{{ t('layout.toggles.theme') }}</span>
             <n-button-group size="small" class="control-actions sidebar-field">
               <n-button
-                ghost
                 round
                 :type="!isDark ? 'primary' : 'default'"
+                :strong="!isDark"
                 @click="setColorMode('light')"
               >
                 {{ t('common.theme.light') }}
               </n-button>
               <n-button
-                ghost
                 round
                 :type="isDark ? 'primary' : 'default'"
+                :strong="isDark"
                 @click="setColorMode('dark')"
               >
                 {{ t('common.theme.dark') }}
@@ -283,7 +283,7 @@ const onAuthMenuSelect = (key: string) => {
   width: 36px;
   height: 36px;
   border-radius: 12px;
-  background: linear-gradient(135deg, #d7c8ee, #9a72d3);
+  background: linear-gradient(135deg, #d4c4ec, #9a72d3);
 }
 
 .brand-text {
@@ -309,7 +309,18 @@ const onAuthMenuSelect = (key: string) => {
 
 .menu :deep(.n-menu-item) {
   border-radius: 12px;
-  transition: background-color 0.2s ease;
+  transition: background-color 0.2s ease, color 0.2s ease;
+}
+
+.menu :deep(.n-menu-item.n-menu-item--selected),
+.menu :deep(.n-menu-item.n-menu-item--selected:hover) {
+  background: rgb(var(--color-brand-600)) !important;
+  color: rgb(var(--color-text-primary)) !important;
+}
+
+.menu :deep(.n-menu-item.n-menu-item--selected .n-menu-item-content__label),
+.menu :deep(.n-menu-item.n-menu-item--selected .n-menu-item-content__icon) {
+  color: inherit !important;
 }
 
 .sidebar-bottom {

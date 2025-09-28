@@ -10,10 +10,10 @@
           <div class="username">@{{ username }}</div>
         </div>
         <n-space>
-          <n-button tertiary type="primary" @click="openPwdDialog">
+          <n-button type="primary" round size="medium" @click="openPwdDialog">
             {{ t('settings.changePassword') }}
           </n-button>
-          <n-button tertiary type="primary" @click="openNameDialog">
+          <n-button type="primary" round size="medium" @click="openNameDialog">
             {{ t('settings.changeDisplayName') }}
           </n-button>
         </n-space>
@@ -22,7 +22,7 @@
       <div class="email-card n-card">
         <div class="email-header">
           <div class="email-title">{{ t('settings.email') }}</div>
-          <n-button tertiary type="primary" @click="openEmailDialog">
+          <n-button type="primary" round size="medium" @click="openEmailDialog">
             {{ t('common.actions.edit') }}
           </n-button>
         </div>
@@ -42,22 +42,36 @@
       :title="t('settings.modals.passwordTitle')"
       :style="{ width: '420px' }"
     >
-      <n-form ref="pwdFormRef" :model="pwdForm" :rules="pwdRules" label-placement="top">
-        <n-form-item :label="t('settings.modals.oldPassword')" path="old_password">
+      <n-form
+        ref="pwdFormRef"
+        :model="pwdForm"
+        :rules="pwdRules"
+        label-placement="top"
+      >
+        <n-form-item
+          :label="t('settings.modals.oldPassword')"
+          path="old_password"
+        >
           <n-input
             v-model:value="pwdForm.old_password"
             type="password"
             :placeholder="t('common.placeholder.passwordOld')"
           />
         </n-form-item>
-        <n-form-item :label="t('settings.modals.newPassword')" path="new_password">
+        <n-form-item
+          :label="t('settings.modals.newPassword')"
+          path="new_password"
+        >
           <n-input
             v-model:value="pwdForm.new_password"
             type="password"
             :placeholder="t('common.placeholder.passwordNew')"
           />
         </n-form-item>
-        <n-form-item :label="t('settings.modals.confirmPassword')" path="confirm_password">
+        <n-form-item
+          :label="t('settings.modals.confirmPassword')"
+          path="confirm_password"
+        >
           <n-input
             v-model:value="pwdForm.confirm_password"
             type="password"
@@ -65,7 +79,9 @@
           />
         </n-form-item>
         <div class="modal-actions">
-          <n-button @click="onPwdCancel">{{ t('settings.modals.cancel') }}</n-button>
+          <n-button @click="onPwdCancel">{{
+            t('settings.modals.cancel')
+          }}</n-button>
           <n-button type="primary" @click="onPwdSave">
             {{ t('settings.modals.save') }}
           </n-button>
@@ -80,7 +96,12 @@
       :title="t('settings.modals.emailTitle')"
       :style="{ width: '420px' }"
     >
-      <n-form ref="emailFormRef" :model="emailForm" :rules="emailRules" label-placement="top">
+      <n-form
+        ref="emailFormRef"
+        :model="emailForm"
+        :rules="emailRules"
+        label-placement="top"
+      >
         <n-form-item :label="t('settings.modals.newEmail')" path="email">
           <n-input
             v-model:value="emailForm.email"
@@ -88,7 +109,9 @@
           />
         </n-form-item>
         <div class="modal-actions">
-          <n-button @click="onEmailCancel">{{ t('settings.modals.cancel') }}</n-button>
+          <n-button @click="onEmailCancel">{{
+            t('settings.modals.cancel')
+          }}</n-button>
           <n-button type="primary" @click="onEmailSave">
             {{ t('settings.modals.save') }}
           </n-button>
@@ -103,15 +126,25 @@
       :title="t('settings.modals.nameTitle')"
       :style="{ width: '420px' }"
     >
-      <n-form ref="nameFormRef" :model="nameForm" :rules="nameRules" label-placement="top">
-        <n-form-item :label="t('settings.modals.displayName')" path="display_name">
+      <n-form
+        ref="nameFormRef"
+        :model="nameForm"
+        :rules="nameRules"
+        label-placement="top"
+      >
+        <n-form-item
+          :label="t('settings.modals.displayName')"
+          path="display_name"
+        >
           <n-input
             v-model:value="nameForm.display_name"
             :placeholder="t('common.placeholder.displayName')"
           />
         </n-form-item>
         <div class="modal-actions">
-          <n-button @click="onNameCancel">{{ t('settings.modals.cancel') }}</n-button>
+          <n-button @click="onNameCancel">{{
+            t('settings.modals.cancel')
+          }}</n-button>
           <n-button type="primary" @click="onNameSave">
             {{ t('settings.modals.save') }}
           </n-button>
@@ -153,13 +186,25 @@ const onPwdCancel = () => {
 }
 const pwdRules = computed<FormRules>(() => ({
   old_password: [
-    { required: true, message: t('settings.rules.oldPassword'), trigger: 'blur' },
+    {
+      required: true,
+      message: t('settings.rules.oldPassword'),
+      trigger: 'blur',
+    },
   ],
   new_password: [
-    { required: true, message: t('settings.rules.newPassword'), trigger: 'blur' },
+    {
+      required: true,
+      message: t('settings.rules.newPassword'),
+      trigger: 'blur',
+    },
   ],
   confirm_password: [
-    { required: true, message: t('settings.rules.confirmPassword'), trigger: 'blur' },
+    {
+      required: true,
+      message: t('settings.rules.confirmPassword'),
+      trigger: 'blur',
+    },
     {
       validator: (_r, v) => v === pwdForm.value.new_password,
       message: t('settings.rules.mismatch'),
@@ -176,11 +221,16 @@ const onPwdSave = () => {
       .then(() => {
         message.success(t('settings.feedback.passwordUpdated'))
         pwdVisible.value = false
-        pwdForm.value = { old_password: '', new_password: '', confirm_password: '' }
+        pwdForm.value = {
+          old_password: '',
+          new_password: '',
+          confirm_password: '',
+        }
       })
       .catch((err: any) => {
-        const msg =
-          (err?.response?.data?.msg || err?.message || t('settings.feedback.passwordFailed')) as string
+        const msg = (err?.response?.data?.msg ||
+          err?.message ||
+          t('settings.feedback.passwordFailed')) as string
         message.error(msg)
       })
   })
@@ -193,7 +243,11 @@ const emailForm = ref({ email: '' })
 const emailRules = computed<FormRules>(() => ({
   email: [
     { required: true, message: t('settings.rules.email'), trigger: 'blur' },
-    { type: 'email', message: t('settings.rules.emailInvalid'), trigger: 'blur' },
+    {
+      type: 'email',
+      message: t('settings.rules.emailInvalid'),
+      trigger: 'blur',
+    },
   ],
 }))
 const openEmailDialog = () => {
@@ -213,8 +267,9 @@ const onEmailSave = () => {
         email.value = res.email
       })
       .catch((err: any) => {
-        const msg =
-          (err?.response?.data?.msg || err?.message || t('settings.feedback.emailFailed')) as string
+        const msg = (err?.response?.data?.msg ||
+          err?.message ||
+          t('settings.feedback.emailFailed')) as string
         message.error(msg)
       })
   })
@@ -226,7 +281,11 @@ const nameFormRef = ref<FormInst | null>(null)
 const nameForm = ref({ display_name: '' })
 const nameRules = computed<FormRules>(() => ({
   display_name: [
-    { required: true, message: t('settings.rules.displayName'), trigger: 'blur' },
+    {
+      required: true,
+      message: t('settings.rules.displayName'),
+      trigger: 'blur',
+    },
   ],
 }))
 const openNameDialog = () => {
@@ -247,8 +306,9 @@ const onNameSave = () => {
         displayName.value = res.display_name
       })
       .catch((err: any) => {
-        const msg =
-          (err?.response?.data?.msg || err?.message || t('settings.feedback.nameFailed')) as string
+        const msg = (err?.response?.data?.msg ||
+          err?.message ||
+          t('settings.feedback.nameFailed')) as string
         message.error(msg)
       })
   })
@@ -256,7 +316,9 @@ const onNameSave = () => {
 const displayName = ref('')
 const username = ref('')
 const email = ref('')
-const initials = computed(() => (displayName.value || username.value || 'U').trim().slice(0, 1).toUpperCase())
+const initials = computed(() =>
+  (displayName.value || username.value || 'U').trim().slice(0, 1).toUpperCase()
+)
 
 onMounted(async () => {
   const res = await getUserInfo()
