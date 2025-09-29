@@ -111,7 +111,7 @@ const en = {
     },
     getStarted: {
       headline: 'Welcome',
-      description: 'Sign in or create an account to access your drive.',
+      description: 'A cloud drive project.',
     },
     toggles: {
       theme: 'Theme',
@@ -120,7 +120,8 @@ const en = {
   },
   home: {
     title: 'Your Cloud, Refined',
-    description: 'Manage, share, and collaborate on files with a focused, minimal workspace.',
+    description:
+      'Manage, share, and collaborate on files with a focused, minimal workspace.',
     primary: 'Open My Drive',
     secondary: 'Browse Shared Files',
     highlights: {
@@ -179,7 +180,8 @@ const en = {
     selectedItems: 'Selected Items',
     noSelection: 'No items selected.',
     noFiles: 'No files found in the selected items.',
-    includeHint: 'Folders will include all nested files and subfolders in the share.',
+    includeHint:
+      'Folders will include all nested files and subfolders in the share.',
     form: {
       code: 'Share Code',
       expires: 'Expires In',

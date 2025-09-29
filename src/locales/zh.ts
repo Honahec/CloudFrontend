@@ -111,7 +111,7 @@ const zh = {
     },
     getStarted: {
       headline: '欢迎回来',
-      description: '登录或注册即可管理你的云端文件。',
+      description: '一个网盘项目',
     },
     toggles: {
       theme: '主题',
