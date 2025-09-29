@@ -534,36 +534,43 @@ async function onDelete() {
 async function onUpload() {
   const input = document.createElement('input')
   input.type = 'file'
-  input.multiple = false
+  input.multiple = true
   input.accept = '*/*'
   input.onchange = async () => {
-    const [file] = Array.from(input.files || [])
-    if (!file) return
+    const files = Array.from(input.files || [])
+    if (files.length === 0) return
     try {
-      initUploadProgress([file])
-
+      initUploadProgress(files)
       const notifyPath = buildNotifyPath(currentPath.value)
-      const policy = await getOSSPolicy(buildUploadPolicyRequest(file))
-      if (!policy?.token) {
-        throw new Error('Missing upload credentials')
-      }
 
-      await uploadAndNotify(file, policy, {
-        keyResolver: (current) => {
+      for (const [index, file] of files.entries()) {
+        updateUploadProgress(index, 0)
+        const policy = await getOSSPolicy(buildUploadPolicyRequest(file))
+        if (!policy?.token) {
+          throw new Error('Missing upload credentials')
+        }
+
+        const resolveObjectKey = (current: File) => {
           const name = current.name
           const dotIndex = name.lastIndexOf('.')
           const ext = dotIndex >= 0 ? name.slice(dotIndex) : ''
           const rand = Math.random().toString(36).slice(2, 10)
           const stamp = Date.now().toString()
           const base = md5(`${name}-${stamp}-${rand}`)
-          const prefix = (policy.token?.prefix || '').replace(/\/+$/, '')
+          const prefix = (policy.token?.prefix || '').replace(/\+$/, '')
           return prefix ? `${prefix}/${base}${ext}` : `${base}${ext}`
-        },
-        notifyPath,
-        onProgress: (_file, _index, percent) => {
-          updateUploadProgress(0, percent)
-        },
-      })
+        }
+
+        await uploadAndNotify(file, policy, {
+          keyResolver: resolveObjectKey,
+          notifyPath,
+          onProgress: (_file, _unused, percent) => {
+            updateUploadProgress(index, percent)
+          },
+        })
+
+        updateUploadProgress(index, 100)
+      }
 
       markUploadSuccess()
       message.success(t('common.feedback.uploadSuccess'))
