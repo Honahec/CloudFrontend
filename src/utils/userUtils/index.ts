@@ -107,3 +107,10 @@ export function removeTokenCookies() {
   document.cookie = 'access_token=; Max-Age=0; Path=/'
   document.cookie = 'refresh_token=; Max-Age=0; Path=/'
 }
+
+export function formatBytesToGB(bytes: number | string): string {
+  const numBytes = typeof bytes === 'string' ? parseInt(bytes, 10) : bytes
+  if (isNaN(numBytes) || numBytes < 0) return '0.00GB'
+  const gb = numBytes / (1024 * 1024 * 1024)
+  return `${gb.toFixed(2)}GB`
+}

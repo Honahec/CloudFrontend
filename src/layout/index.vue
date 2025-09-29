@@ -22,6 +22,23 @@
         </div>
 
         <div class="sidebar-bottom">
+          <div v-if="isLoggedIn && quotaDisplayReady" class="quota-block">
+            <span class="control-label">{{ t('layout.quota.storage') }}</span>
+            <div class="quota-progress sidebar-field">
+              <n-progress
+                type="line"
+                :percentage="quotaPercentage"
+                :height="8"
+                color="#9A72D3"
+                rail-color="rgba(154, 114, 211, 0.24)"
+                :show-indicator="false"
+              />
+              <div class="quota-text">
+                {{ quotaUsageText }}
+              </div>
+            </div>
+          </div>
+
           <div class="control-block">
             <span class="control-label">{{ t('layout.toggles.theme') }}</span>
             <n-button-group size="small" class="control-actions sidebar-field">
@@ -114,7 +131,8 @@ import { useRouter } from 'vue-router'
 import { useTheme } from '@/composables/theme'
 import { useLocale, useI18n } from '@/composables/locale'
 import { getUserInfo, refreshAccessToken } from '@/api/users/api'
-import { getTokenCookies, setTokenCookies } from '@/utils/userUtils'
+import { listFilesByPath } from '@/api/files/api'
+import { getTokenCookies, setTokenCookies, formatBytesToGB } from '@/utils/userUtils'
 
 const router = useRouter()
 const { t } = useI18n()
@@ -193,6 +211,44 @@ const isLoggedIn = ref(false)
 const userName = ref('')
 const displayName = ref('')
 
+const totalQuota = ref<number | null>(null)
+const usedQuota = ref<number | null>(null)
+const quotaLoading = ref(false)
+
+const quotaDisplayReady = computed(
+  () => totalQuota.value !== null && usedQuota.value !== null
+)
+const quotaPercentage = computed(() => {
+  if (!quotaDisplayReady.value) return 0
+  const total = totalQuota.value ?? 0
+  if (total <= 0) return 0
+  const used = Math.min(usedQuota.value ?? 0, total)
+  return Number(((used / total) * 100).toFixed(2))
+})
+const quotaUsageText = computed(() => {
+  if (!quotaDisplayReady.value) return ''
+  const usedLabel = formatBytesToGB(usedQuota.value ?? 0)
+  const totalLabel = formatBytesToGB(totalQuota.value ?? 0)
+  return t('layout.quota.usage', { used: usedLabel, total: totalLabel })
+})
+
+const fetchQuotaData = async () => {
+  if (!isLoggedIn.value || quotaLoading.value) return
+
+  try {
+    quotaLoading.value = true
+    const response = await listFilesByPath('/')
+    if (response.quota !== undefined && response.used_space !== undefined) {
+      totalQuota.value = typeof response.quota === 'string' ? parseInt(response.quota, 10) : response.quota
+      usedQuota.value = typeof response.used_space === 'string' ? parseInt(response.used_space, 10) : response.used_space
+    }
+  } catch (error) {
+    console.warn('Failed to fetch quota data:', error)
+  } finally {
+    quotaLoading.value = false
+  }
+}
+
 onMounted(async () => {
   try {
     const { access, refresh } = getTokenCookies()
@@ -209,6 +265,9 @@ onMounted(async () => {
       displayName.value =
         (res as any).user?.display_name ?? (res as any).display_name ?? ''
       isLoggedIn.value = true
+
+      // Fetch quota data after login
+      await fetchQuotaData()
     } else {
       isLoggedIn.value = false
     }

@@ -290,6 +290,8 @@ Authorization: Bearer <access_token>
       "path": "/"
     }
   ],
+  "quota": "...",
+  "used_space": "...",
   "message": "Success"
 }
 ```

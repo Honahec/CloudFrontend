@@ -117,6 +117,10 @@ const zh = {
       theme: '主题',
       language: '语言',
     },
+    quota: {
+      storage: '存储配额',
+      usage: '{used} / {total}',
+    },
   },
   home: {
     title: '让云端更专注',

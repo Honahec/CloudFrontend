@@ -46,6 +46,8 @@ export interface FileRecord {
 
 export interface FileResponse {
   files: FileRecord[]
+  quota?: number | string
+  used_space?: number | string
   message: string
 }
 

@@ -117,6 +117,10 @@ const en = {
       theme: 'Theme',
       language: 'Language',
     },
+    quota: {
+      storage: 'Storage Quota',
+      usage: '{used} / {total}',
+    },
   },
   home: {
     title: 'Your Cloud, Refined',
