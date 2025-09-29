@@ -1,6 +1,5 @@
-import { Alova } from '@/utils/alova/index'
-import type { FileResponse, ReachToken } from '@/api/files/type'
-import { getTokenCookies } from '@/utils/userUtils'
+import type { FileCreateResponse, FileUploadedPayload, ReachToken } from '@/api/files/type'
+import { notifyFileUploaded } from '@/api/files/api'
 
 export type OSSPolicyToken = ReachToken['token']
 
@@ -12,7 +11,7 @@ export interface UploadedResult {
   key: string
 }
 
-export type NotifyItem = Omit<UploadedResult, 'key'> & { path: string }
+export type NotifyItem = FileUploadedPayload
 
 function normalizePrefix(prefix: string | undefined): string {
   if (!prefix) return ''
@@ -35,16 +34,30 @@ function buildOSSUrl(host: string, key: string) {
   return `${host.replace(/\/$/, '')}/${encodedKey}`
 }
 
+function resolveAccessKeyId(token: OSSPolicyToken): string {
+  const accessKey = token.access_key_id || (token as unknown as { accessid?: string }).accessid
+  if (!accessKey) {
+    throw new Error('Missing access key id in upload policy')
+  }
+  return accessKey
+}
+
 function ensureWithinSize(file: File, token: OSSPolicyToken) {
+  const raw = token.max_file_size
+  const maxSize = typeof raw === 'string' ? Number(raw) : raw
   if (
-    typeof token.max_file_size === 'number' &&
-    file.size > token.max_file_size
+    typeof maxSize === 'number' &&
+    Number.isFinite(maxSize) &&
+    maxSize > 0 &&
+    file.size > maxSize
   ) {
-    throw new Error(
-      `${file.name} is too large: ${(file.size / (1024 * 1024)).toFixed(
-        2
-      )}MB > ${(token.max_file_size / (1024 * 1024)).toFixed(2)}MB`
+    const actualMB = (file.size / (1024 * 1024)).toFixed(2)
+    const limitMB = (maxSize / (1024 * 1024)).toFixed(2)
+    const error = new Error(
+      `${file.name} is too large: ${actualMB}MB > ${limitMB}MB`
     )
+    error.name = 'FileSizeExceededError'
+    throw error
   }
 }
 
@@ -69,7 +82,7 @@ export async function uploadFileToOSS(
 
   // Build native Aliyun OSS form (per working reference)
   form.append('key', resolvedKey)
-  form.append('OSSAccessKeyId', token.access_key_id)
+  form.append('OSSAccessKeyId', resolveAccessKeyId(token))
   form.append('policy', token.policy)
   form.append('signature', token.signature)
   const successAction = anyToken.success_action_status || '200'
@@ -129,58 +142,17 @@ export async function uploadFileToOSS(
   }
 }
 
-/** Upload multiple files to OSS concurrently. */
-export async function uploadFilesToOSS(
-  files: File[],
-  token: OSSPolicyToken,
-  opts?: {
-    signal?: AbortSignal
-    keyResolver?: (file: File, index: number) => string | undefined
-    onProgress?: (file: File, index: number, percent: number, e: ProgressEvent) => void
-  }
-): Promise<UploadedResult[]> {
-  const tasks = files.map((f, i) =>
-    uploadFileToOSS(f, token, {
-      key: opts?.keyResolver?.(f, i),
-      signal: opts?.signal,
-      onProgress: opts?.onProgress
-        ? (p, e) => opts.onProgress?.(f, i, p, e)
-        : undefined,
-    })
-  )
-  return Promise.all(tasks)
+function normalizeNotifyPath(path?: string): string {
+  if (!path || path === '/') return '/'
+  let normalized = path.startsWith('/') ? path : `/${path}`
+  if (!normalized.endsWith('/')) normalized += '/'
+  return normalized
 }
 
-/** Build the backend notify payload from uploaded results. */
-export function buildNotifyBody(
-  uploaded: UploadedResult[],
-  path: string
-): NotifyItem[] {
-  // ensure path starts with '/' and ends with '/' (except root '/')
-  let p = path || '/'
-  if (!p.startsWith('/')) p = '/' + p
-  if (p !== '/' && !p.endsWith('/')) p = p + '/'
-  return uploaded.map((u) => ({
-    name: u.name,
-    content_type: u.content_type,
-    size: u.size,
-    oss_url: u.oss_url,
-    path: p,
-  }))
-}
-
-/** Notify backend that files have been uploaded successfully. */
-export function notifyBackendUploaded(items: NotifyItem[]) {
-  const access = getTokenCookies().access
-  return Alova.Post<FileResponse>('/file/uploaded/', items, {
-    headers: access ? { Authorization: `Bearer ${access}` } : undefined,
-  })
-}
-
-/** High-level: upload to OSS first, then notify backend. */
+/** High-level: upload a single file to OSS, then notify backend. */
 export async function uploadAndNotify(
-  files: File[],
-  token: OSSPolicyToken,
+  file: File,
+  policy: ReachToken,
   opts?: {
     signal?: AbortSignal
     keyResolver?: (file: File, index: number) => string | undefined
@@ -192,16 +164,32 @@ export async function uploadAndNotify(
       e: ProgressEvent
     ) => void
   }
-): Promise<FileResponse> {
-  const uploaded = await uploadFilesToOSS(files, token, {
+): Promise<FileCreateResponse> {
+  if (!policy?.token) {
+    throw new Error('Missing upload credentials')
+  }
+
+  const uploaded = await uploadFileToOSS(file, policy.token, {
+    key: opts?.keyResolver?.(file, 0),
     signal: opts?.signal,
-    keyResolver: opts?.keyResolver,
-    onProgress: opts?.onProgress,
+    onProgress: opts?.onProgress
+      ? (percent, event) => opts.onProgress?.(file, 0, percent, event)
+      : undefined,
   })
-  const body = buildNotifyBody(uploaded, opts?.notifyPath || '/')
-  // Use Alova instance to send notify request
-  const request = notifyBackendUploaded(body)
-  return request
+
+  const payload: NotifyItem = {
+    name: uploaded.name,
+    content_type: uploaded.content_type,
+    size: uploaded.size,
+    oss_url: uploaded.oss_url,
+    path: normalizeNotifyPath(opts?.notifyPath),
+  }
+
+  if (policy.upload_id) {
+    payload.upload_id = policy.upload_id
+  }
+
+  return notifyFileUploaded(payload)
 }
 
 /** Convenience: compute OSS object key for a file using the token prefix. */

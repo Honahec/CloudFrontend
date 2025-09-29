@@ -115,7 +115,7 @@ import MoveDialog from '@/components/drive/MoveDialog.vue'
 import UploadProgressList, {
   type UploadProgressItem,
 } from '@/components/upload/UploadProgressList.vue'
-import type { FileRecord } from '@/api/files/type'
+import type { FileRecord, UploadPolicyRequest } from '@/api/files/type'
 import {
   createFolder,
   deleteFile,
@@ -197,6 +197,23 @@ function markUploadFailure() {
       item.status = 'error'
     }
   })
+}
+
+function buildUploadPolicyRequest(file: File): UploadPolicyRequest {
+  const size = Number.isFinite(file.size) ? Math.trunc(file.size) : NaN
+  if (!Number.isFinite(size) || size <= 0) {
+    throw new Error('Unable to request upload token for empty file')
+  }
+  const contentType =
+    typeof file.type === 'string' && file.type.trim().length > 0
+      ? file.type
+      : 'application/octet-stream'
+
+  return {
+    file_name: file.name,
+    file_size: size,
+    content_type: contentType,
+  }
 }
 
 const currentPath = computed(() => {
@@ -517,21 +534,23 @@ async function onDelete() {
 async function onUpload() {
   const input = document.createElement('input')
   input.type = 'file'
-  input.multiple = true
+  input.multiple = false
   input.accept = '*/*'
   input.onchange = async () => {
-    const filesToUpload = Array.from(input.files || [])
-    if (filesToUpload.length === 0) return
+    const [file] = Array.from(input.files || [])
+    if (!file) return
     try {
-      const policy = await getOSSPolicy()
-
-      initUploadProgress(filesToUpload as File[])
+      initUploadProgress([file])
 
       const notifyPath = buildNotifyPath(currentPath.value)
+      const policy = await getOSSPolicy(buildUploadPolicyRequest(file))
+      if (!policy?.token) {
+        throw new Error('Missing upload credentials')
+      }
 
-      await uploadAndNotify(filesToUpload as File[], policy.token, {
-        keyResolver: (file) => {
-          const name = file.name
+      await uploadAndNotify(file, policy, {
+        keyResolver: (current) => {
+          const name = current.name
           const dotIndex = name.lastIndexOf('.')
           const ext = dotIndex >= 0 ? name.slice(dotIndex) : ''
           const rand = Math.random().toString(36).slice(2, 10)
@@ -541,18 +560,22 @@ async function onUpload() {
           return prefix ? `${prefix}/${base}${ext}` : `${base}${ext}`
         },
         notifyPath,
-        onProgress: (_file, index, percent) => {
-          updateUploadProgress(index, percent)
+        onProgress: (_file, _index, percent) => {
+          updateUploadProgress(0, percent)
         },
       })
 
       markUploadSuccess()
       message.success(t('common.feedback.uploadSuccess'))
       await fetchFiles()
-    } catch (error) {
+    } catch (error: any) {
       console.error(error)
       markUploadFailure()
-      message.error(t('common.feedback.uploadFailed'))
+      const errorMessage =
+        error?.name === 'FileSizeExceededError'
+          ? error.message
+          : error?.response?.data?.message || error?.message || t('common.feedback.uploadFailed')
+      message.error(errorMessage)
     }
   }
   input.click()

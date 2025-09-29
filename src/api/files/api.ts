@@ -9,22 +9,23 @@ import type {
   FileUpdateResponse,
   FileDownloadResponse,
   FileDownloadPayload,
+  UploadPolicyRequest,
+  FileUploadedPayload,
 } from './type'
-import type { NotifyItem } from '@/utils/fileUtils'
 import { getTokenCookies } from '@/utils/userUtils'
 
 // Get a direct-upload policy/token for Aliyun OSS
-export const getOSSPolicy = () => {
+export const getOSSPolicy = (payload: UploadPolicyRequest) => {
   const access = getTokenCookies().access
-  return Alova.Get<ReachToken>('/file/get-token/', {
+  return Alova.Post<ReachToken>('/file/get-token/', payload, {
     headers: access ? { Authorization: `Bearer ${access}` } : undefined,
   })
 }
 
 // Notify backend that files were uploaded to OSS successfully
-export const notifyFilesUploaded = (items: NotifyItem[]) => {
+export const notifyFileUploaded = (payload: FileUploadedPayload) => {
   const access = getTokenCookies().access
-  return Alova.Post<FileResponse>('/file/uploaded/', items, {
+  return Alova.Post<FileCreateResponse>('/file/uploaded/', payload, {
     headers: access ? { Authorization: `Bearer ${access}` } : undefined,
   })
 }

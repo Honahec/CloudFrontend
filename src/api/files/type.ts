@@ -1,6 +1,7 @@
 export interface ReachToken {
   token: {
-    access_key_id: string
+    access_key_id?: string
+    accessid?: string
     policy: string
     signature: string
     expiration: string
@@ -8,9 +9,29 @@ export interface ReachToken {
     endpoint: string
     prefix: string
     host: string
-    max_file_size: number
+    max_file_size: number | string
+    declared_file_size?: number | string
+    success_action_status?: string | number
+    security_token?: string
+    'x-oss-security-token'?: string
   }
+  upload_id?: string
   message: string
+}
+
+export interface UploadPolicyRequest {
+  file_name: string
+  file_size: number
+  content_type: string
+}
+
+export interface FileUploadedPayload {
+  name: string
+  content_type: string
+  size: number
+  oss_url: string
+  path: string
+  upload_id?: string
 }
 
 export interface FileRecord {

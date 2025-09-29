@@ -137,7 +137,7 @@ import type { DataTableColumns } from 'naive-ui'
 import type { FileDownloadPayload, FileRecord } from '@/api/files/type'
 import type { DropDetailResponse, DropRecord } from '@/api/drop/type'
 import { getDrop } from '@/api/drop/api'
-import { downloadFile, notifyFilesUploaded } from '@/api/files/api'
+import { downloadFile, notifyFileUploaded } from '@/api/files/api'
 import { getTokenCookies } from '@/utils/userUtils'
 import { buildShareTree, collectTreeKeys, type ShareTreeOption } from '@/utils/shareTree'
 import { mapShareAccessError } from '@/utils/shareErrors'
@@ -434,16 +434,15 @@ async function saveToMy(file: FileRecord) {
   }
 
   try {
-    // Use notify API to create a file record in user's account without uploading
-    const notifyItems = [{
+    const payload = {
       name: file.name,
       content_type: file.content_type,
       size: file.size,
       oss_url: file.oss_url,
       path: normalizeNotifyPath(file.path),
-    }]
+    }
 
-    await notifyFilesUploaded(notifyItems)
+    await notifyFileUploaded(payload)
     message.success(t('common.feedback.saved', { name: file.name }))
   } catch (error: any) {
     console.error(error)
@@ -468,7 +467,7 @@ async function saveEntireShare() {
 
   savingAll.value = true
   try {
-    const notifyItems = targets.map((file) => ({
+    const payloads = targets.map((file) => ({
       name: file.name,
       content_type: file.content_type,
       size: file.size,
@@ -476,7 +475,9 @@ async function saveEntireShare() {
       path: normalizeNotifyPath(file.path),
     }))
 
-    await notifyFilesUploaded(notifyItems)
+    for (const payload of payloads) {
+      await notifyFileUploaded(payload)
+    }
     message.success(t('common.feedback.savedAll'))
   } catch (error: any) {
     console.error(error)
