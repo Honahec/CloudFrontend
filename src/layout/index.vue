@@ -132,7 +132,12 @@ import { useTheme } from '@/composables/theme'
 import { useLocale, useI18n } from '@/composables/locale'
 import { getUserInfo, refreshAccessToken } from '@/api/users/api'
 import { listFilesByPath } from '@/api/files/api'
-import { getTokenCookies, setTokenCookies, formatBytesToGB } from '@/utils/userUtils'
+import {
+  getTokenCookies,
+  setTokenCookies,
+  formatBytesToGB,
+  formatBytes,
+} from '@/utils/userUtils'
 
 const router = useRouter()
 const { t } = useI18n()
@@ -227,21 +232,44 @@ const quotaPercentage = computed(() => {
 })
 const quotaUsageText = computed(() => {
   if (!quotaDisplayReady.value) return ''
-  const usedLabel = formatBytesToGB(usedQuota.value ?? 0)
+  const usedLabel = formatBytes(usedQuota.value ?? 0)
   const totalLabel = formatBytesToGB(totalQuota.value ?? 0)
   return t('layout.quota.usage', { used: usedLabel, total: totalLabel })
 })
 
+const parseBytes = (v: unknown): number | null => {
+  if (typeof v === 'number' && Number.isFinite(v)) return v
+  if (typeof v === 'string') {
+    const n = parseInt(v, 10)
+    return Number.isFinite(n) ? n : null
+  }
+  return null
+}
+
+const pickFirstNumber = (o: any, ...keys: string[]) => {
+  for (const k of keys) {
+    if (o && Object.prototype.hasOwnProperty.call(o, k)) {
+      const n = parseBytes(o[k])
+      if (n !== null) return n
+    }
+  }
+  return null
+}
+
 const fetchQuotaData = async () => {
   if (!isLoggedIn.value || quotaLoading.value) return
-
+  quotaLoading.value = true
   try {
-    quotaLoading.value = true
-    const response = await listFilesByPath('/')
-    if (response.quota !== undefined && response.used_space !== undefined) {
-      totalQuota.value = typeof response.quota === 'string' ? parseInt(response.quota, 10) : response.quota
-      usedQuota.value = typeof response.used_space === 'string' ? parseInt(response.used_space, 10) : response.used_space
-    }
+    const resp: any = await listFilesByPath('/')
+    const total = pickFirstNumber(resp, 'quota')
+    const used = pickFirstNumber(resp, 'used_space')
+
+    if (total !== null) totalQuota.value = total
+    if (used !== null) usedQuota.value = used
+    console.log('Fetched quota data:', {
+      totalQuota: totalQuota.value,
+      usedQuota: usedQuota.value,
+    })
   } catch (error) {
     console.warn('Failed to fetch quota data:', error)
   } finally {
@@ -274,6 +302,12 @@ onMounted(async () => {
   } catch (error) {
     isLoggedIn.value = false
   }
+  // subscribe to quota refresh events
+  window.addEventListener('storage:refetch-quota', fetchQuotaData as any)
+})
+
+onBeforeUnmount(() => {
+  window.removeEventListener('storage:refetch-quota', fetchQuotaData as any)
 })
 
 watch(isLoggedIn, async () => {
@@ -304,7 +338,8 @@ const onAuthMenuSelect = (key: string) => {
 
 <style scoped>
 .layout {
-  min-height: 100vh;
+  height: 100vh;
+  overflow: hidden;
   background: rgb(var(--color-surface));
 }
 
@@ -315,7 +350,7 @@ const onAuthMenuSelect = (key: string) => {
   box-sizing: border-box;
   border-right: 1px solid var(--border-color-subtle);
   background: rgb(var(--color-surface-muted));
-  min-height: 100vh;
+  height: 100vh;
 }
 
 .sidebar-inner {
@@ -423,11 +458,32 @@ const onAuthMenuSelect = (key: string) => {
   width: 85%;
 }
 
+.quota-block {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.quota-progress {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.quota-text {
+  font-size: 11px;
+  color: rgb(var(--color-brand-500));
+  text-align: right;
+  font-weight: 500;
+}
+
 .auth-block {
   margin-top: auto;
 }
 
 .content {
+  height: 100vh;
+  overflow-y: auto;
   background: rgb(var(--color-surface));
   padding: 32px 40px;
   box-sizing: border-box;

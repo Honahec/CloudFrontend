@@ -396,6 +396,7 @@ async function deleteRow(row: FileRecord) {
   try {
     await deleteFile(row.id)
     message.success(t('common.feedback.deleteSuccess'))
+    window.dispatchEvent(new Event('storage:refetch-quota'))
     await fetchFiles()
   } catch (error) {
     console.error(error)
@@ -523,6 +524,7 @@ async function onDelete() {
     const fileIds = selected.value.map((file) => file.id)
     await deleteFiles(fileIds)
     message.success(t('common.feedback.deleteSuccess'))
+    window.dispatchEvent(new Event('storage:refetch-quota'))
     selected.value = []
     await fetchFiles()
   } catch (error) {
@@ -574,6 +576,7 @@ async function onUpload() {
 
       markUploadSuccess()
       message.success(t('common.feedback.uploadSuccess'))
+      window.dispatchEvent(new Event('storage:refetch-quota'))
       await fetchFiles()
     } catch (error: any) {
       console.error(error)

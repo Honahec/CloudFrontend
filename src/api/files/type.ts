@@ -47,6 +47,7 @@ export interface FileRecord {
 export interface FileResponse {
   files: FileRecord[]
   quota?: number | string
+  // backend may return one of these for used bytes
   used_space?: number | string
   message: string
 }

@@ -114,3 +114,21 @@ export function formatBytesToGB(bytes: number | string): string {
   const gb = numBytes / (1024 * 1024 * 1024)
   return `${gb.toFixed(2)}GB`
 }
+
+export function formatBytes(bytes: number | string): string {
+  const numBytes = typeof bytes === 'string' ? parseInt(bytes, 10) : bytes
+  if (isNaN(numBytes) || numBytes < 0) return '0B'
+
+  const units = ['B', 'KB', 'MB', 'GB', 'TB']
+  let size = numBytes
+  let unitIndex = 0
+
+  while (size >= 1024 && unitIndex < units.length - 1) {
+    size /= 1024
+    unitIndex++
+  }
+
+  // 对于GB及以上，保留2位小数；对于MB及以下，保留合适的小数位
+  const decimals = unitIndex >= 3 ? 2 : unitIndex >= 2 ? 1 : 0
+  return `${size.toFixed(decimals)}${units[unitIndex]}`
+}
