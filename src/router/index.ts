@@ -17,6 +17,16 @@ const router = createRouter({
       component: () => import('@/views/auth/register.vue'),
     },
     {
+      path: '/auth',
+      name: 'AuthSplit',
+      component: () => import('@/views/auth/auth-split.vue'),
+    },
+    {
+      path: '/auth-preview',
+      name: 'AuthSplitPreview',
+      component: () => import('@/views/auth/auth-split.vue'),
+    },
+    {
       path: '/logout',
       name: 'Logout',
       component: () => import('@/views/auth/logout.vue'),
@@ -62,7 +72,7 @@ const router = createRouter({
 })
 
 // Require auth for routes not in whiteList and not under /share
-const whiteList = ['/', '/login', '/register']
+const whiteList = ['/', '/login', '/register', '/auth', '/auth-preview']
 router.beforeEach((to, _from, next) => {
   if (whiteList.includes(to.path) || to.path.startsWith('/share')) return next()
   const { access, refresh } = getTokenCookies()

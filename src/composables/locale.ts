@@ -33,7 +33,10 @@ function formatMessage(template: string, params?: Record<string, unknown>) {
 
 export function provideLocale(initial: LocaleKey = 'zh') {
   const stored = window?.localStorage?.getItem('app-locale') as LocaleKey | null
-  const locale = ref<LocaleKey>(stored && stored in messages ? stored : initial)
+  const nav = (typeof navigator !== 'undefined' ? navigator.language : '').toLowerCase()
+  const byNav = (nav.startsWith('zh') ? 'zh' : 'en') as LocaleKey
+  const fallback = (initial && initial in messages ? initial : byNav) as LocaleKey
+  const locale = ref<LocaleKey>(stored && stored in messages ? stored : fallback)
 
   const context: LocaleContext = {
     locale,
