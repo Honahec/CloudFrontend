@@ -1,14 +1,16 @@
-export type Mode = 'login' | 'register'
+export type AuthMode = 'login' | 'register'
 
-export function toggleMode(mode: Mode): Mode {
+export function toggleMode(mode: AuthMode): AuthMode {
   return mode === 'login' ? 'register' : 'login'
 }
 
-export function getInitialMode(options: {
+interface InitialModeOptions {
   urlMode?: string | null
   storedMode?: string | null
-  initialMode?: Mode
-}): Mode {
+  initialMode?: AuthMode
+}
+
+export function getInitialMode(options: InitialModeOptions): AuthMode {
   const { urlMode, storedMode, initialMode = 'login' } = options
   if (urlMode === 'login' || urlMode === 'register') return urlMode
   if (storedMode === 'login' || storedMode === 'register') return storedMode

@@ -94,22 +94,11 @@
               </n-dropdown>
             </template>
             <template v-else>
-              <n-dropdown
-                trigger="click"
-                placement="top-start"
-                :options="authMenuOptions"
-                :min-width="dropdownWidth"
-                :max-width="dropdownWidth"
-                :content-style="dropdownStyle"
-                @update:show="handleDropdownShow"
-                @select="onAuthMenuSelect"
-              >
-                <div class="auth-trigger sidebar-field" ref="triggerRef">
-                  <n-button type="primary" block>
-                    {{ t('common.actions.getStarted') }}
-                  </n-button>
-                </div>
-              </n-dropdown>
+              <div class="auth-trigger sidebar-field" ref="triggerRef">
+                <n-button type="primary" block @click="goAuth">
+                  {{ t('common.actions.getStarted') }}
+                </n-button>
+              </div>
             </template>
           </div>
         </div>
@@ -333,6 +322,10 @@ const onUserMenuSelect = (key: string) => {
 const onAuthMenuSelect = (key: string) => {
   if (key === 'register') router.push('/register')
   else if (key === 'login') router.push('/login')
+}
+
+const goAuth = () => {
+  router.push('/auth')
 }
 </script>
 

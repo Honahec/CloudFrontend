@@ -63,11 +63,11 @@ const goShare = () => {
 }
 
 const goLogin = () => {
-  router.push('/login')
+  router.push('/auth')
 }
 
 const goRegister = () => {
-  router.push('/register')
+  router.push('/auth')
 }
 </script>
 

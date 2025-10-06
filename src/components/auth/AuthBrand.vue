@@ -3,7 +3,7 @@
     <slot>
       <div class="logo-circle" aria-hidden="true"></div>
       <div class="brand-text">
-        <span class="brand-name">{{ appName }}</span>
+        <span class="brand-name">{{ displayName }}</span>
       </div>
     </slot>
   </div>
@@ -19,7 +19,7 @@ interface Props {
 
 const props = defineProps<Props>()
 
-const appName = computed(() => props.appName ?? 'Cloud')
+const displayName = computed(() => props.appName ?? 'Cloud')
 const ariaLabel = computed(() => props.ariaLabel ?? 'Application brand')
 </script>
 
@@ -33,8 +33,8 @@ const ariaLabel = computed(() => props.ariaLabel ?? 'Application brand')
   width: 28px;
   height: 28px;
   border-radius: 9999px;
-  background: rgb(var(--auth-accent, var(--color-brand-600)));
-  box-shadow: 0 0 0 4px rgb(var(--auth-accent-weak, var(--color-brand-400)) / 0.25);
+  background: var(--auth-accent, rgb(var(--color-brand-600)));
+  box-shadow: 0 0 0 4px var(--auth-accent-weak, rgba(59, 130, 246, 0.25));
 }
 .brand-name {
   font-weight: 700;

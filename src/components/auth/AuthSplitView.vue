@@ -24,8 +24,8 @@
     </section>
 
     <!-- Back button top-left -->
-    <button class="back-btn" @click="onBack" :aria-label="t('auth.misc.back', 'Back')">
-      {{ t('auth.misc.back', 'Back') }}
+    <button class="back-btn" @click="onBack" :aria-label="t('auth.misc.back') || 'Back'">
+      {{ t('auth.misc.back') || 'Back' }}
     </button>
 
     <!-- Diagonal slash with centered toggle -->
@@ -122,19 +122,23 @@ const onToggle = () => {
   mode.value = mode.value === 'login' ? 'register' : 'login'
 }
 
-const loginTitle = computed(() => t('auth.login.headline', 'Welcome back'))
-const loginSub = computed(() => t('auth.login.subtext', 'Sign in to continue'))
-const registerTitle = computed(() => t('auth.register.headline', 'Join us'))
-const registerSub = computed(() => t('auth.register.subtext', 'Create your account'))
+const loginTitle = computed(() => t('auth.login.headline') || 'Welcome back')
+const loginSub = computed(() => t('auth.login.subtext') || 'Sign in to continue')
+const registerTitle = computed(() => t('auth.register.headline') || 'Join us')
+const registerSub = computed(() => t('auth.register.subtext') || 'Create your account')
 
-const toggleLabel = computed(() => mode.value === 'login' ? t('auth.toggle.toRegister', 'Go to Register') : t('auth.toggle.toLogin', 'Go to Login'))
+const toggleLabel = computed(() =>
+  mode.value === 'login'
+    ? t('auth.toggle.toRegister') || 'Go to Register'
+    : t('auth.toggle.toLogin') || 'Go to Login'
+)
 
 const rootStyle = computed(() => ({
-  '--auth-accent': 'var(--color-brand-600)',
-  '--auth-accent-weak': 'var(--color-brand-400)',
-  '--auth-surface': 'var(--color-surface-muted)',
+  '--auth-accent': 'rgb(var(--color-brand-600))',
+  '--auth-accent-weak': 'rgba(var(--color-brand-400), 0.25)',
+  '--auth-surface': 'rgb(var(--color-surface-muted))',
   '--auth-muted': 'rgb(var(--color-text-secondary))',
-} as any))
+} as Record<string, string>))
 
 const slashStyle = computed(() => ({
   '--slash-shift': mode.value === 'login' ? '66%' : '34%',
@@ -153,6 +157,10 @@ function onBack() {
   position: relative;
   background: rgb(var(--color-surface));
   color: rgb(var(--color-text-primary));
+  --auth-accent: rgb(var(--color-brand-600));
+  --auth-accent-weak: rgba(var(--color-brand-400), 0.25);
+  --slash-shift: 66%;
+  --left-width: 66%;
   overflow: hidden;
 }
 
@@ -187,11 +195,11 @@ function onBack() {
   position: absolute;
   top: -10%;
   bottom: -10%;
-  left: var(--slash-shift, 62%);
+  left: var(--slash-shift);
   width: 6px;
-  background: rgb(var(--auth-accent, var(--color-brand-600)));
+  background: var(--auth-accent);
   transform: skewX(-25deg);
-  box-shadow: 0 0 0 8px rgb(var(--auth-accent-weak, var(--color-brand-400)) / 0.25);
+  box-shadow: 0 0 0 8px var(--auth-accent-weak);
   transition: left 320ms cubic-bezier(.2,.8,.2,1), transform 320ms cubic-bezier(.2,.8,.2,1);
 }
 
@@ -200,12 +208,12 @@ Toggle button on the slash
 ***************************/
 .slash-toggle {
   position: absolute;
-  left: calc(var(--slash-shift, 62%) - 24px);
+  left: calc(var(--slash-shift) - 24px);
   top: 50%;
   transform: translateY(-50%) rotate(-14deg);
   pointer-events: auto;
   border: none;
-  background: rgb(var(--auth-accent, var(--color-brand-600)));
+  background: var(--auth-accent);
   color: rgb(var(--color-text-inverted));
   border-radius: 9999px;
   padding: 10px 14px;
@@ -236,16 +244,17 @@ Toggle button on the slash
 .back-btn:focus-visible { outline: 3px solid var(--color-focus-ring); outline-offset: 2px; }
 
 /* Animate widths with flex-basis to avoid jarring reflow */
-.left { flex: 0 0 var(--left-width, 68%); transition: flex-basis 320ms cubic-bezier(.2,.8,.2,1); }
+.left { flex: 0 0 var(--left-width); transition: flex-basis 320ms cubic-bezier(.2,.8,.2,1); }
 .right { flex: 1 1 auto; transition: flex-basis 320ms cubic-bezier(.2,.8,.2,1); }
 
 /* Responsive adjustments */
 @media (max-width: 1023px) {
   .auth-split {
+    display: grid;
     grid-template-columns: 1fr 1fr;
   }
-  .slash::before { left: var(--slash-shift, 58%); transform: skewX(-18deg); }
-  .slash-toggle { left: calc(var(--slash-shift, 58%) - 24px); }
+  .slash::before { left: var(--slash-shift); transform: skewX(-18deg); }
+  .slash-toggle { left: calc(var(--slash-shift) - 24px); }
 }
 
 @media (max-width: 767px) {
