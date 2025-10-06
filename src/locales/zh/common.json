@@ -1,0 +1,71 @@
+{
+  "appName": "Cloud",
+  "theme": {
+    "light": "浅色",
+    "dark": "深色"
+  },
+  "language": {
+    "zh": "中文",
+    "en": "English"
+  },
+  "actions": {
+    "account": "账号",
+    "getStarted": "开始使用",
+    "settings": "设置",
+    "logout": "退出登录",
+    "register": "注册",
+    "login": "登录",
+    "edit": "编辑",
+    "close": "关闭",
+    "createShare": "创建分享",
+    "copy": "复制",
+    "copyLink": "复制链接",
+    "copyPassword": "复制密码",
+    "download": "下载",
+    "delete": "删除",
+    "confirm": "确定",
+    "cancel": "取消"
+  },
+  "placeholder": {
+    "shareCode": "请输入提取码",
+    "password": "请输入密码",
+    "email": "邮箱地址",
+    "passwordOld": "当前密码",
+    "passwordNew": "新密码",
+    "confirmPassword": "确认密码",
+    "displayName": "昵称"
+  },
+  "labels": {
+    "expires": "过期时间",
+    "downloads": "下载次数",
+    "passwordIfRequired": "密码（如需）"
+  },
+  "status": {
+    "noEntries": "暂无数据"
+  },
+  "feedback": {
+    "downloadFailed": "下载失败",
+    "deleteSuccess": "删除成功",
+    "deleteFailed": "删除失败",
+    "selectOne": "请至少选择一个项目",
+    "moveSuccess": "移动成功",
+    "moveFailed": "移动失败",
+    "uploadSuccess": "上传完成",
+    "uploadFailed": "上传失败",
+    "requireLoginDownload": "请登录后下载",
+    "saved": "已保存 {name}",
+    "saveFailed": "保存失败",
+    "noFilesToSave": "没有可保存的文件",
+    "savedAll": "已保存全部文件",
+    "loadSharedSuccess": "加载分享成功",
+    "requireLoginSave": "请登录后保存",
+    "loadSharedFailed": "加载分享失败",
+    "invalidCode": "提取码不正确",
+    "folderCreated": "文件夹已创建",
+    "folderCreateFailed": "创建文件夹失败",
+    "renameSuccess": "重命名成功",
+    "renameFailed": "重命名失败",
+    "copySuccess": "已复制到剪贴板",
+    "copyError": "复制失败"
+  }
+}

@@ -1,0 +1,19 @@
+{
+  "getStarted": {
+    "description": "Manage your files in the cloud"
+  },
+  "menu": {
+    "home": "Home",
+    "drive": "Drive",
+    "share": "Share",
+    "settings": "Settings"
+  },
+  "quota": {
+    "storage": "Storage",
+    "usage": "{used} of {total} used"
+  },
+  "toggles": {
+    "theme": "Theme",
+    "language": "Language"
+  }
+}

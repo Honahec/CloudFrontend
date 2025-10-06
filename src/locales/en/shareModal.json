@@ -1,0 +1,31 @@
+{
+  "title": "Create share",
+  "selectedItems": "Selected items",
+  "noSelection": "No files selected",
+  "noFiles": "No files",
+  "includeHint": "Folders will include all subfolders and files.",
+  "form": {
+    "code": "Share code",
+    "expires": "Expires in",
+    "downloads": "Max downloads",
+    "requireLogin": "Require login",
+    "password": "Password (optional)"
+  },
+  "result": {
+    "code": "Code",
+    "link": "Link",
+    "password": "Password",
+    "expires": "Expires"
+  },
+  "expireOptions": {
+    "one": "1 day",
+    "three": "3 days",
+    "seven": "7 days",
+    "fifteen": "15 days"
+  },
+  "feedback": {
+    "codeRequired": "Share code is required",
+    "loadFolderFailed": "Failed to load folder {name}",
+    "loadFailed": "Failed to load selection preview"
+  }
+}

@@ -1,0 +1,19 @@
+{
+  "getStarted": {
+    "description": "开始使用 Cloud Drive 管理你的文件"
+  },
+  "menu": {
+    "home": "首页",
+    "drive": "网盘",
+    "share": "分享",
+    "settings": "设置"
+  },
+  "quota": {
+    "storage": "存储空间",
+    "usage": "已用 {used} / 共 {total}"
+  },
+  "toggles": {
+    "theme": "主题",
+    "language": "语言"
+  }
+}

@@ -1,0 +1,8 @@
+{
+  "status": {
+    "pending": "等待中",
+    "uploading": "上传中",
+    "success": "完成",
+    "error": "错误"
+  }
+}

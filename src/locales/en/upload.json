@@ -1,0 +1,8 @@
+{
+  "status": {
+    "pending": "Pending",
+    "uploading": "Uploading",
+    "success": "Done",
+    "error": "Error"
+  }
+}

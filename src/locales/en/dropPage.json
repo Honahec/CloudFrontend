@@ -1,0 +1,16 @@
+{
+  "title": "Shared content",
+  "code": "Share code: {code}",
+  "password": "Password",
+  "load": "Load",
+  "expires": "Expires at {time}",
+  "downloads": "Downloads: {current} / {max}",
+  "loginRequired": "Login required",
+  "saveAll": "Save all to My Drive",
+  "folderStructure": "Folder structure",
+  "currentPath": "Current path: {path}",
+  "empty": "No files in this share",
+  "prompt": "Enter password (if required) and click Load",
+  "typeFolder": "Folder",
+  "saveToMy": "Save to My Drive"
+}

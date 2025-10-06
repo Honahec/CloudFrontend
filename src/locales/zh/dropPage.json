@@ -1,0 +1,16 @@
+{
+  "title": "分享内容",
+  "code": "分享码：{code}",
+  "password": "密码",
+  "load": "加载",
+  "expires": "过期时间：{time}",
+  "downloads": "下载：{current} / {max}",
+  "loginRequired": "需要登录",
+  "saveAll": "保存全部到我的网盘",
+  "folderStructure": "文件结构",
+  "currentPath": "当前位置：{path}",
+  "empty": "该分享中没有文件",
+  "prompt": "如需密码请输入后点击“加载”",
+  "typeFolder": "文件夹",
+  "saveToMy": "保存到我的网盘"
+}

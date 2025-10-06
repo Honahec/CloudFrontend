@@ -1,0 +1,22 @@
+{
+  "title": "Open a share",
+  "codeLabel": "Share code",
+  "passwordLabel": "Password",
+  "submit": "Open",
+  "loginRequiredLabel": "Login required",
+  "yes": "Yes",
+  "no": "No",
+  "saveShare": "Save all to My Drive",
+  "treeTitle": "Files and folders",
+  "currentPath": "Current path: {path}",
+  "noFiles": "No files in this share",
+  "empty": "Enter a code to view a share",
+  "typeFolder": "Folder",
+  "saveSingle": "Save to My Drive",
+  "errors": {
+    "unauthorized": "You are not authorized to access this share",
+    "notFound": "Share not found or has been deleted",
+    "invalidPassword": "Incorrect password",
+    "limitExceeded": "Download limit exceeded"
+  }
+}

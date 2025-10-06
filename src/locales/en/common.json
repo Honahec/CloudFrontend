@@ -1,0 +1,71 @@
+{
+  "appName": "Cloud",
+  "theme": {
+    "light": "Light",
+    "dark": "Dark"
+  },
+  "language": {
+    "zh": "中文",
+    "en": "English"
+  },
+  "actions": {
+    "account": "Account",
+    "getStarted": "Get Started",
+    "settings": "Settings",
+    "logout": "Log out",
+    "register": "Register",
+    "login": "Log in",
+    "edit": "Edit",
+    "close": "Close",
+    "createShare": "Create Share",
+    "copy": "Copy",
+    "copyLink": "Copy Link",
+    "copyPassword": "Copy Password",
+    "download": "Download",
+    "delete": "Delete",
+    "confirm": "Confirm",
+    "cancel": "Cancel"
+  },
+  "placeholder": {
+    "shareCode": "Enter share code",
+    "password": "Enter password",
+    "email": "Email address",
+    "passwordOld": "Current password",
+    "passwordNew": "New password",
+    "confirmPassword": "Confirm password",
+    "displayName": "Display name"
+  },
+  "labels": {
+    "expires": "Expires",
+    "downloads": "Downloads",
+    "passwordIfRequired": "Password (if required)"
+  },
+  "status": {
+    "noEntries": "No entries"
+  },
+  "feedback": {
+    "downloadFailed": "Download failed",
+    "deleteSuccess": "Deleted successfully",
+    "deleteFailed": "Delete failed",
+    "selectOne": "Please select at least one item",
+    "moveSuccess": "Moved successfully",
+    "moveFailed": "Move failed",
+    "uploadSuccess": "Upload completed",
+    "uploadFailed": "Upload failed",
+    "requireLoginDownload": "Please login to download",
+    "saved": "Saved {name}",
+    "saveFailed": "Save failed",
+    "noFilesToSave": "No files to save",
+    "savedAll": "Saved all files",
+    "loadSharedSuccess": "Loaded shared files",
+    "requireLoginSave": "Please login to save",
+    "loadSharedFailed": "Failed to load shared files",
+    "invalidCode": "Invalid share code",
+    "folderCreated": "Folder created",
+    "folderCreateFailed": "Failed to create folder",
+    "renameSuccess": "Renamed successfully",
+    "renameFailed": "Rename failed",
+    "copySuccess": "Copied to clipboard",
+    "copyError": "Copy failed"
+  }
+}

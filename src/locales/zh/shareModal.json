@@ -1,0 +1,31 @@
+{
+  "title": "创建分享",
+  "selectedItems": "已选项目",
+  "noSelection": "未选择任何文件",
+  "noFiles": "暂无文件",
+  "includeHint": "选择文件夹时，将包含其全部子文件夹与文件。",
+  "form": {
+    "code": "提取码",
+    "expires": "有效期",
+    "downloads": "最大下载次数",
+    "requireLogin": "需要登录",
+    "password": "密码（可选）"
+  },
+  "result": {
+    "code": "提取码",
+    "link": "链接",
+    "password": "密码",
+    "expires": "过期时间"
+  },
+  "expireOptions": {
+    "one": "1 天",
+    "three": "3 天",
+    "seven": "7 天",
+    "fifteen": "15 天"
+  },
+  "feedback": {
+    "codeRequired": "请输入提取码",
+    "loadFolderFailed": "加载文件夹失败：{name}",
+    "loadFailed": "加载预览失败"
+  }
+}

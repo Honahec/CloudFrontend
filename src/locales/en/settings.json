@@ -1,0 +1,34 @@
+{
+  "changePassword": "Change password",
+  "changeDisplayName": "Change display name",
+  "email": "Email",
+  "modals": {
+    "passwordTitle": "Update password",
+    "oldPassword": "Current password",
+    "newPassword": "New password",
+    "confirmPassword": "Confirm password",
+    "cancel": "Cancel",
+    "save": "Save",
+    "emailTitle": "Update email",
+    "newEmail": "New email",
+    "nameTitle": "Update display name",
+    "displayName": "Display name"
+  },
+  "rules": {
+    "oldPassword": "Please enter current password",
+    "newPassword": "Please enter new password",
+    "confirmPassword": "Please confirm new password",
+    "mismatch": "Passwords do not match",
+    "email": "Email is required",
+    "emailInvalid": "Invalid email address",
+    "displayName": "Please enter a display name"
+  },
+  "feedback": {
+    "passwordUpdated": "Password updated",
+    "passwordFailed": "Failed to update password",
+    "emailUpdated": "Email updated",
+    "emailFailed": "Failed to update email",
+    "nameUpdated": "Display name updated",
+    "nameFailed": "Failed to update display name"
+  }
+}

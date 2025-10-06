@@ -1,0 +1,10 @@
+{
+  "title": "Move to...",
+  "root": "Root",
+  "empty": "No folders",
+  "open": "Open",
+  "cancel": "Cancel",
+  "confirm": "Move here",
+  "failed": "Failed to load folders",
+  "invalidTarget": "You cannot move a folder into itself"
+}

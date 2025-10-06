@@ -1,0 +1,24 @@
+{
+  "toolbar": {
+    "newFolder": "New folder",
+    "upload": "Upload",
+    "share": "Share",
+    "download": "Download",
+    "move": "Move",
+    "rename": "Rename",
+    "delete": "Delete"
+  },
+  "breadcrumb": {
+    "root": "root",
+    "unnamed": "(unnamed)"
+  },
+  "dialogs": {
+    "newFolderTitle": "Create folder",
+    "newFolderLabel": "Folder name",
+    "newFolderPlaceholder": "Enter folder name",
+    "renameTitle": "Rename",
+    "renameLabel": "New name",
+    "deleteSingle": "Delete {name}?",
+    "deleteMultiple": "Delete {count} items?"
+  }
+}

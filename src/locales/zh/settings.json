@@ -1,0 +1,34 @@
+{
+  "changePassword": "修改密码",
+  "changeDisplayName": "修改昵称",
+  "email": "邮箱",
+  "modals": {
+    "passwordTitle": "修改密码",
+    "oldPassword": "当前密码",
+    "newPassword": "新密码",
+    "confirmPassword": "确认新密码",
+    "cancel": "取消",
+    "save": "保存",
+    "emailTitle": "修改邮箱",
+    "newEmail": "新邮箱",
+    "nameTitle": "修改昵称",
+    "displayName": "昵称"
+  },
+  "rules": {
+    "oldPassword": "请输入当前密码",
+    "newPassword": "请输入新密码",
+    "confirmPassword": "请确认新密码",
+    "mismatch": "两次输入的密码不一致",
+    "email": "请输入邮箱",
+    "emailInvalid": "邮箱格式不正确",
+    "displayName": "请输入昵称"
+  },
+  "feedback": {
+    "passwordUpdated": "密码已更新",
+    "passwordFailed": "修改密码失败",
+    "emailUpdated": "邮箱已更新",
+    "emailFailed": "修改邮箱失败",
+    "nameUpdated": "昵称已更新",
+    "nameFailed": "修改昵称失败"
+  }
+}

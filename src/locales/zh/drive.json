@@ -1,0 +1,24 @@
+{
+  "toolbar": {
+    "newFolder": "新建文件夹",
+    "upload": "上传",
+    "share": "分享",
+    "download": "下载",
+    "move": "移动",
+    "rename": "重命名",
+    "delete": "删除"
+  },
+  "breadcrumb": {
+    "root": "根目录",
+    "unnamed": "（未命名）"
+  },
+  "dialogs": {
+    "newFolderTitle": "创建文件夹",
+    "newFolderLabel": "文件夹名称",
+    "newFolderPlaceholder": "输入文件夹名称",
+    "renameTitle": "重命名",
+    "renameLabel": "新名称",
+    "deleteSingle": "删除 {name}？",
+    "deleteMultiple": "删除 {count} 个项目？"
+  }
+}

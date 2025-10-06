@@ -1,0 +1,11 @@
+{
+  "emptyLoading": "Loading files...",
+  "empty": "No files",
+  "columns": {
+    "name": "Name",
+    "contentType": "Type",
+    "size": "Size",
+    "created": "Created",
+    "actions": "Actions"
+  }
+}

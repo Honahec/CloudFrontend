@@ -1,0 +1,22 @@
+{
+  "title": "打开分享",
+  "codeLabel": "提取码",
+  "passwordLabel": "密码",
+  "submit": "打开",
+  "loginRequiredLabel": "需要登录",
+  "yes": "是",
+  "no": "否",
+  "saveShare": "保存全部到我的网盘",
+  "treeTitle": "文件与文件夹",
+  "currentPath": "当前位置：{path}",
+  "noFiles": "该分享中没有文件",
+  "empty": "输入提取码以查看分享",
+  "typeFolder": "文件夹",
+  "saveSingle": "保存到我的网盘",
+  "errors": {
+    "unauthorized": "没有权限访问该分享",
+    "notFound": "分享不存在或已被删除",
+    "invalidPassword": "密码不正确",
+    "limitExceeded": "下载次数已用尽"
+  }
+}
