@@ -62,7 +62,7 @@ const router = createRouter({
 })
 
 // Require auth for routes not in whiteList and not under /share
-const whiteList = ['/', '/auth', '/auth-preview']
+const whiteList = ['/', '/auth']
 router.beforeEach((to, _from, next) => {
   if (whiteList.includes(to.path) || to.path.startsWith('/share')) return next()
   const { access, refresh } = getTokenCookies()

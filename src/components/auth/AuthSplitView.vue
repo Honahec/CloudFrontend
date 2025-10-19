@@ -1,72 +1,80 @@
 <template>
   <main
-    class="auth-split"
-    :data-auth-mode="mode"
-    :style="rootStyle"
+    class="auth-stack"
+    :data-mode="mode"
   >
-    <section
-      class="panel left"
-      :data-panel="'login'"
-      :class="{ dim: mode === 'register' }"
-      aria-labelledby="login-heading"
-      aria-describedby="login-subtext"
-    >
-      <header class="panel-header">
-        <AuthBrand :appName="brandName" />
-      </header>
-      <div class="panel-body">
-        <h1 id="login-heading" class="panel-title">{{ loginTitle }}</h1>
-        <LoginForm
-          @loginSuccess="() => emit('loginSuccess')"
-          @authError="(m:string) => emit('authError', m)"
-        />
-      </div>
-    </section>
-
-    <!-- Back button top-left -->
-    <button class="back-btn" @click="onBack" :aria-label="t('auth.misc.back') || 'Back'">
-      {{ t('auth.misc.back') || 'Back' }}
-    </button>
-
-    <!-- Diagonal slash with centered toggle -->
-    <div class="slash" :style="slashStyle">
-      <button
-        class="slash-toggle"
-        role="button"
-        :aria-pressed="mode === 'register' ? 'true' : 'false'"
-        :aria-label="toggleLabel"
-        :title="toggleLabel"
-        @click="onToggle"
-        @keydown.enter.prevent="onToggle"
-        @keydown.space.prevent="onToggle"
-      >
-        <span class="toggle-text">{{ toggleLabel }}</span>
+    <header class="masthead">
+      <button class="back-btn" @click="onBack" :aria-label="t('auth.misc.back') || 'Back'">
+        {{ t('auth.misc.back') || 'Back' }}
       </button>
-    </div>
-
-    <section
-      class="panel right"
-      :data-panel="'register'"
-      :class="{ dim: mode === 'login' }"
-      aria-labelledby="register-heading"
-      aria-describedby="register-subtext"
-    >
-      <header class="panel-header">
-        <AuthBrand :appName="brandName" />
-      </header>
-      <div class="panel-body">
-        <h1 id="register-heading" class="panel-title">{{ registerTitle }}</h1>
-        <RegisterForm
-          @registerSuccess="() => emit('registerSuccess')"
-          @authError="(m:string) => emit('authError', m)"
-        />
+      <AuthBrand :appName="brandName" class="brand" />
+      <div
+        class="mode-switch"
+        role="tablist"
+        aria-label="Authentication mode"
+      >
+        <button
+          type="button"
+          role="tab"
+          class="mode-button"
+          :data-active="mode === 'login'"
+          :aria-selected="mode === 'login' ? 'true' : 'false'"
+          :tabindex="mode === 'login' ? '0' : '-1'"
+          @click="setMode('login')"
+        >
+          {{ loginTitle }}
+        </button>
+        <button
+          type="button"
+          role="tab"
+          class="mode-button"
+          :data-active="mode === 'register'"
+          :aria-selected="mode === 'register' ? 'true' : 'false'"
+          :tabindex="mode === 'register' ? '0' : '-1'"
+          @click="setMode('register')"
+        >
+          {{ registerTitle }}
+        </button>
+        <span class="mode-indicator" aria-hidden="true"></span>
       </div>
-    </section>
+    </header>
+
+    <div class="stage" role="presentation">
+      <section
+        class="layer register"
+        :aria-hidden="mode === 'login' ? 'true' : 'false'"
+      >
+        <div class="layer-card register-card">
+          <h1 class="layer-title">{{ registerTitle }}</h1>
+          <p v-if="registerSub" class="layer-sub">{{ registerSub }}</p>
+          <RegisterForm
+            @registerSuccess="() => emit('registerSuccess')"
+            @authError="(m: string) => emit('authError', m)"
+          />
+        </div>
+      </section>
+
+      <section
+        class="layer login"
+        :aria-hidden="mode === 'register' ? 'true' : 'false'"
+      >
+        <div class="layer-card login-card">
+          <h1 class="layer-title">{{ loginTitle }}</h1>
+          <p v-if="loginSub" class="layer-sub">{{ loginSub }}</p>
+          <LoginForm
+            @loginSuccess="() => emit('loginSuccess')"
+            @authError="(m: string) => emit('authError', m)"
+          />
+        </div>
+      </section>
+
+      <div class="divider" aria-hidden="true"></div>
+    </div>
   </main>
 </template>
 
 <script lang="ts" setup>
-import { computed, onMounted, watch, ref } from 'vue'
+import { computed, onMounted, ref, watch } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
 import { useI18n } from '@/composables/locale'
 import AuthBrand from './AuthBrand.vue'
@@ -98,52 +106,33 @@ const emit = defineEmits<{
 const { t } = useI18n()
 const router = useRouter()
 const route = useRoute()
-const prefersReducedMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches
 
 const mode = ref<Mode>(props.initialMode)
 
 onMounted(() => {
-  // initial from URL or localStorage
-  const urlMode = (route.query.mode as string) as Mode
-  const storeMode = (localStorage.getItem(props.persistKey) as Mode | null)
+  const urlMode = route.query.mode as string
+  const storeMode = localStorage.getItem(props.persistKey) as Mode | null
   if (urlMode === 'login' || urlMode === 'register') mode.value = urlMode
   else if (storeMode === 'login' || storeMode === 'register') mode.value = storeMode
   else mode.value = props.initialMode
 })
 
-watch(mode, (m) => {
-  localStorage.setItem(props.persistKey, m)
+watch(mode, (value) => {
+  localStorage.setItem(props.persistKey, value)
   if (props.urlSync) {
-    router.replace({ query: { ...route.query, mode: m } })
+    router.replace({ query: { ...route.query, mode: value } })
   }
 })
 
-const onToggle = () => {
-  mode.value = mode.value === 'login' ? 'register' : 'login'
+const setMode = (value: Mode) => {
+  mode.value = value
 }
 
-const loginTitle = computed(() => t('auth.login.headline') || 'Welcome back')
-const loginSub = computed(() => t('auth.login.subtext') || 'Sign in to continue')
-const registerTitle = computed(() => t('auth.register.headline') || 'Join us')
-const registerSub = computed(() => t('auth.register.subtext') || 'Create your account')
+const loginTitle = computed(() => t('auth.login.headline') || 'Sign in')
+const loginSub = computed(() => t('auth.login.subtext') || '')
+const registerTitle = computed(() => t('auth.register.headline') || 'Create account')
+const registerSub = computed(() => t('auth.register.subtext') || '')
 
-const toggleLabel = computed(() =>
-  mode.value === 'login'
-    ? t('auth.toggle.toRegister') || 'Go to Register'
-    : t('auth.toggle.toLogin') || 'Go to Login'
-)
-
-const rootStyle = computed(() => ({
-  '--auth-accent': 'rgb(var(--color-brand-600))',
-  '--auth-accent-weak': 'rgba(var(--color-brand-400), 0.25)',
-  '--auth-surface': 'rgb(var(--color-surface-muted))',
-  '--auth-muted': 'rgb(var(--color-text-secondary))',
-} as Record<string, string>))
-
-const slashStyle = computed(() => ({
-  '--slash-shift': mode.value === 'login' ? '66%' : '34%',
-  '--left-width': mode.value === 'login' ? '66%' : '34%',
-}))
 const backTarget = computed(() => (route.query.back as string) || '/')
 function onBack() {
   router.replace(backTarget.value)
@@ -151,130 +140,281 @@ function onBack() {
 </script>
 
 <style scoped>
-.auth-split {
+.auth-stack {
+  --auth-accent: rgb(var(--color-brand-600));
+  --auth-accent-glow: rgba(var(--color-brand-400), 0.32);
+  --auth-surface: rgb(var(--color-surface-muted));
+  --split-raw: -6%;
+  --split-clamped: clamp(0%, var(--split-raw), 100%);
+  --split-duration: 520ms;
+  --split-ease: cubic-bezier(.2, .8, .2, 1);
+
   min-height: 100vh;
   display: flex;
-  position: relative;
-  background: rgb(var(--color-surface));
+  flex-direction: column;
   color: rgb(var(--color-text-primary));
-  --auth-accent: rgb(var(--color-brand-600));
-  --auth-accent-weak: rgba(var(--color-brand-400), 0.25);
-  --slash-shift: 66%;
-  --left-width: 66%;
+  background: linear-gradient(
+    140deg,
+    rgba(var(--color-brand-100), 0.85),
+    rgba(var(--color-surface), 0.9)
+  );
+  position: relative;
   overflow: hidden;
 }
 
-/* Panels */
-.panel {
-  position: relative;
-  padding: clamp(20px, 5vw, 56px);
-  display: flex;
-  flex-direction: column;
-}
-.panel-header { display: flex; justify-content: flex-start; }
-.panel-body { max-width: 520px; }
-.panel-title { margin: 16px 0 6px; font-weight: 800; font-size: clamp(20px, 3vw, 28px); }
-.panel-sub { margin: 0 0 12px 0; color: rgb(var(--color-text-secondary)); }
-
-/* Dim effect for inactive side */
-.panel.dim {
-  filter: saturate(0.85) brightness(0.92) blur(2px);
-  opacity: 0.82;
+.auth-stack::after {
+  content: "";
+  position: absolute;
+  inset: -20% -10%;
+  background: radial-gradient(circle at 15% 20%, rgba(var(--color-brand-400), 0.28), transparent 60%);
   pointer-events: none;
+  z-index: 0;
 }
 
-/* Slash divider */
-.slash {
-  position: absolute;
-  inset: 0;
-  pointer-events: none; /* let only button capture events */
+.auth-stack[data-mode="register"] {
+  --split-raw: 106%;
 }
 
-.slash::before {
-  content: '';
-  position: absolute;
-  top: -10%;
-  bottom: -10%;
-  left: var(--slash-shift);
-  width: 6px;
-  background: var(--auth-accent);
-  transform: skewX(-25deg);
-  box-shadow: 0 0 0 8px var(--auth-accent-weak);
-  transition: left 320ms cubic-bezier(.2,.8,.2,1), transform 320ms cubic-bezier(.2,.8,.2,1);
+.masthead {
+  position: relative;
+  z-index: 3;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: clamp(12px, 3vw, 32px);
+  padding: clamp(24px, 4vw, 48px) clamp(28px, 6vw, 72px);
+  flex-wrap: wrap;
 }
 
-/***************************
-Toggle button on the slash
-***************************/
-.slash-toggle {
-  position: absolute;
-  left: calc(var(--slash-shift) - 24px);
-  top: 50%;
-  transform: translateY(-50%) rotate(-14deg);
-  pointer-events: auto;
-  border: none;
-  background: var(--auth-accent);
-  color: rgb(var(--color-text-inverted));
+.brand {
+  flex: 1 1 auto;
+  display: flex;
+  justify-content: center;
+}
+
+.back-btn {
+  flex: 0 0 auto;
+  border: 1px solid var(--border-color-subtle);
+  background: rgb(var(--color-surface-overlay));
+  color: rgb(var(--color-text-primary));
   border-radius: 9999px;
-  padding: 10px 14px;
+  padding: 6px 14px;
   cursor: pointer;
-  box-shadow: 0 6px 20px rgba(0, 0, 0, 0.18);
-  transition: left 320ms cubic-bezier(.2,.8,.2,1), background-color 160ms ease;
+  font-weight: 600;
 }
-.slash-toggle:focus-visible {
+
+.back-btn:hover {
+  background: rgb(var(--color-surface));
+}
+
+.back-btn:focus-visible {
   outline: 3px solid var(--color-focus-ring);
   outline-offset: 2px;
 }
-.toggle-text { font-weight: 700; font-size: 13px; white-space: nowrap; }
 
-/* Back button */
-.back-btn {
-  position: absolute;
-  top: 16px;
-  left: 16px;
-  z-index: 2;
-  background: var(--color-button-ghost-bg);
-  color: rgb(var(--color-text-primary));
-  border: 1px solid var(--border-color-subtle);
+.mode-switch {
+  position: relative;
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  background: rgba(var(--color-surface-overlay), 0.85);
   border-radius: 9999px;
-  padding: 6px 12px;
+  padding: 4px;
+  border: 1px solid var(--border-color-subtle);
+  box-shadow: inset 0 1px 4px rgba(17, 17, 17, 0.08);
+}
+
+.mode-button {
+  position: relative;
+  z-index: 1;
+  border: none;
+  background: transparent;
+  color: rgb(var(--color-text-secondary));
+  font-weight: 600;
+  padding: 10px 18px;
+  border-radius: 9999px;
   cursor: pointer;
+  transition: color 160ms ease;
 }
-.back-btn:hover { background: rgb(var(--color-surface-overlay)); }
-.back-btn:focus-visible { outline: 3px solid var(--color-focus-ring); outline-offset: 2px; }
 
-/* Animate widths with flex-basis to avoid jarring reflow */
-.left { flex: 0 0 var(--left-width); transition: flex-basis 320ms cubic-bezier(.2,.8,.2,1); }
-.right { flex: 1 1 auto; transition: flex-basis 320ms cubic-bezier(.2,.8,.2,1); }
+.mode-button[data-active="true"] {
+  color: rgb(var(--color-text-inverted));
+}
 
-/* Responsive adjustments */
-@media (max-width: 1023px) {
-  .auth-split {
-    display: grid;
-    grid-template-columns: 1fr 1fr;
+.mode-button:focus-visible {
+  outline: 3px solid var(--color-focus-ring);
+  outline-offset: 2px;
+}
+
+.mode-indicator {
+  position: absolute;
+  top: 4px;
+  bottom: 4px;
+  left: 4px;
+  width: calc((100% - 8px) / 2);
+  border-radius: 9999px;
+  background: var(--auth-accent);
+  box-shadow: 0 12px 40px rgba(var(--color-brand-600), 0.35);
+  transition: transform var(--split-duration) var(--split-ease);
+}
+
+.auth-stack[data-mode="register"] .mode-indicator {
+  transform: translateX(100%);
+}
+
+.stage {
+  position: relative;
+  flex: 1 1 auto;
+  display: flex;
+  align-items: stretch;
+  justify-content: center;
+  min-height: 0;
+  padding: clamp(24px, 6vw, 80px);
+  z-index: 1;
+}
+
+.layer {
+  position: absolute;
+  inset: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: clamp(28px, 6vw, 96px);
+  transition: clip-path var(--split-duration) var(--split-ease), opacity 260ms ease;
+  pointer-events: none;
+}
+
+.layer-card {
+  width: min(520px, 80vw);
+  padding: clamp(32px, 5vw, 48px);
+  border-radius: 32px;
+  background: var(--auth-surface);
+  border: 1px solid var(--border-color-subtle);
+  box-shadow: 0 32px 120px rgba(17, 17, 17, 0.2);
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+  transform-origin: center;
+  transform: scale(0.975);
+  opacity: 0.92;
+  transition: transform 240ms ease, box-shadow 240ms ease, opacity 240ms ease;
+}
+
+.auth-stack[data-mode="login"] .layer.login .layer-card,
+.auth-stack[data-mode="register"] .layer.register .layer-card {
+  transform: scale(1);
+  opacity: 1;
+  box-shadow: 0 40px 160px rgba(17, 17, 17, 0.22);
+}
+
+.layer-title {
+  margin: 0;
+  font-size: clamp(26px, 3vw, 32px);
+  font-weight: 800;
+  color: rgb(var(--color-text-primary));
+}
+
+.layer-sub {
+  margin: 0;
+  font-size: 14px;
+  color: rgb(var(--color-text-secondary));
+}
+
+.layer.login {
+  clip-path: inset(0 0 0 var(--split-clamped));
+}
+
+.layer.register {
+  clip-path: inset(0 calc(100% - var(--split-clamped)) 0 0);
+}
+
+.auth-stack[data-mode="login"] .layer.login,
+.auth-stack[data-mode="register"] .layer.register {
+  pointer-events: auto;
+  opacity: 1;
+}
+
+.auth-stack[data-mode="login"] .layer.register {
+  opacity: 0.65;
+}
+
+.auth-stack[data-mode="register"] .layer.login {
+  opacity: 0.65;
+}
+
+.divider {
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+}
+
+.divider::before {
+  content: "";
+  position: absolute;
+  top: 8%;
+  bottom: 8%;
+  left: var(--split-raw);
+  transform: translateX(-50%);
+  width: 4px;
+  border-radius: 999px;
+  background: var(--auth-accent);
+  box-shadow: 0 0 0 8px var(--auth-accent-glow), 0 12px 32px rgba(var(--color-brand-600), 0.45);
+  transition:
+    left var(--split-duration) var(--split-ease),
+    transform var(--split-duration) var(--split-ease);
+}
+
+@media (max-width: 1024px) {
+  .layer-card {
+    width: min(480px, 86vw);
   }
-  .slash::before { left: var(--slash-shift); transform: skewX(-18deg); }
-  .slash-toggle { left: calc(var(--slash-shift) - 24px); }
 }
 
-@media (max-width: 767px) {
-  .auth-split {
-    display: flex;
+@media (max-width: 768px) {
+  .masthead {
+    padding: 20px 18px 0;
     flex-direction: column;
+    align-items: stretch;
   }
-  .panel { padding: 20px; }
-  .panel.dim { filter: none; opacity: 1; display: none; }
-  .slash::before {
-    top: auto; bottom: auto; left: 0; right: 0; height: 4px; width: auto; transform: none;
+  .brand {
+    justify-content: flex-start;
   }
-  .slash-toggle {
-    position: static; transform: none;
-    align-self: center; margin: 10px auto; display: inline-flex;
+
+  .stage {
+    min-height: auto;
+    padding: 24px 16px 32px;
+  }
+
+  .layer {
+    position: relative;
+    clip-path: none !important;
+    opacity: 1 !important;
+    pointer-events: auto !important;
+    padding: 0;
+  }
+
+  .layer-card {
+    width: 100%;
+    padding: 28px 20px;
+    margin: 0;
+    box-shadow: 0 18px 50px rgba(17, 17, 17, 0.14);
+  }
+
+  .auth-stack[data-mode="login"] .layer.register,
+  .auth-stack[data-mode="register"] .layer.login {
+    display: none;
+  }
+
+  .divider {
+    display: none;
   }
 }
 
-/* Reduced motion */
 @media (prefers-reduced-motion: reduce) {
-  .slash::before, .slash-toggle { transition: none !important; }
+  .mode-button,
+  .mode-indicator,
+  .layer,
+  .divider::before {
+    transition: none !important;
+  }
 }
 </style>
